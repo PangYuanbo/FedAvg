@@ -80,7 +80,7 @@ By including these instructions in the README file, you provide clear guidance o
 ｜0.2| True  | ∞  | 1658   | 1 |0.1||683.4｜96.7%|
 |0| True  | 10 | 316    | 1 |0.1||---｜
 ｜0.1| True  | 10 | 87     | 1 |0.1||340｜98.23%|
-｜0.2| True  | 10 | 77     | 1 |0.1||---｜
+｜0.2| True  | 10 | 77     | 1 |0.1||309｜98.17%|
 ｜0.5| True  | 10 | 75     | 1 |0.1||---｜
 ｜1| True  | 10 | 70     | 1 |0.1||---｜
 
