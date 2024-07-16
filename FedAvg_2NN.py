@@ -9,7 +9,6 @@ import torchvision.transforms as transforms
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
-from Nets import DoubleNN, CNN
 
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -20,6 +19,36 @@ train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True
 
 test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
 
+class DoubleNN(nn.Module):
+    def __init__(self):
+        super(DoubleNN, self).__init__()
+        self.fc1 = nn.Linear(28 * 28, 200)
+        self.fc2 = nn.Linear(200, 200)
+        self.fc3 = nn.Linear(200, 10)
+
+    def forward(self, x):
+        x = x.view(-1, 28 * 28)
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+class CNN(nn.Module):
+    def __init__(self):
+        super(CNN, self).__init__()
+        self.conv1 = nn.Conv2d(1, 32, 3, 1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.fc1 = nn.Linear(12 * 12 * 64, 128)
+        self.fc2 = nn.Linear(128, 10)
+
+    def forward(self, x):
+        x = torch.relu(self.conv1(x))
+        x = torch.max_pool2d(x, 2, 2)
+        x = torch.relu(self.conv2(x))
+        x = torch.max_pool2d(x, 2, 2)
+        x = x.view(-1, 12 * 12 * 64)
+        x = torch.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
 models = [DoubleNN().to(device) for _ in range(100)]
 centermodel = DoubleNN().to(device)
 optimizer = optim.SGD(centermodel.parameters(), lr=0.01)
@@ -59,7 +88,7 @@ def test(model, testloader):
 
 #FedAvg parameters
 C = 0.2  #fraction of clients
-B = 10  #batch size
+B = 600  #batch size
 E = 1  #number of local epochs
 l = 0.1 #learning rate
 ifIID = False
@@ -103,8 +132,8 @@ def partition_data_noniid(dataset, num_clients, num_shards):
 def saving_model(model):
     torch.save(model.state_dict(), f"model_{time.time()}.pt")
 
-
-num_rounds = 77
+start = time.time()
+num_rounds = 1658
 for round in range(num_rounds):
     print(f"Round {round + 1}")
     #select clients
@@ -133,7 +162,7 @@ for round in range(num_rounds):
     # print("Finished testing")
 
 print("Finished FedAvg")
-
+print(f"Time taken: {time.time() - start} seconds")
 #test the center model
 print("Testing the center model")
 test(centermodel, DataLoader(test_data, shuffle=True))
