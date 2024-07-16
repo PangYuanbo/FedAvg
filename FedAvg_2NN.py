@@ -35,22 +35,22 @@ class DoubleNN(nn.Module):
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        self.fc1 = nn.Linear(12 * 12 * 64, 128)
-        self.fc2 = nn.Linear(128, 10)
+        self.conv1 = nn.Conv2d(1, 32, 5, 1)
+        self.conv2 = nn.Conv2d(32, 64, 5, 1)
+        self.fc1 = nn.Linear(4 * 4 * 64, 512)
+        self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
         x = torch.relu(self.conv1(x))
         x = torch.max_pool2d(x, 2, 2)
         x = torch.relu(self.conv2(x))
         x = torch.max_pool2d(x, 2, 2)
-        x = x.view(-1, 12 * 12 * 64)
+        x= x.view(-1, 4 * 4 * 64)
         x = torch.relu(self.fc1(x))
         x = self.fc2(x)
         return x
-models = [DoubleNN().to(device) for _ in range(100)]
-centermodel = DoubleNN().to(device)
+models = [CNN().to(device) for _ in range(100)]
+centermodel = CNN().to(device)
 optimizer = optim.SGD(centermodel.parameters(), lr=0.01)
 
 
@@ -88,8 +88,8 @@ def test(model, testloader):
 
 #FedAvg parameters
 C = 0.2  #fraction of clients
-B = 600  #batch size
-E = 1  #number of local epochs
+B = 10  #batch size
+E = 5  #number of local epochs
 l = 0.1 #learning rate
 ifIID = False
 
@@ -133,7 +133,7 @@ def saving_model(model):
     torch.save(model.state_dict(), f"model_{time.time()}.pt")
 
 start = time.time()
-num_rounds = 1658
+num_rounds = 50
 for round in range(num_rounds):
     print(f"Round {round + 1}")
     #select clients
