@@ -133,7 +133,7 @@ def saving_model(model):
     torch.save(model.state_dict(), f"model_{time.time()}.pt")
 
 start = time.time()
-num_rounds = 50
+num_rounds = 18
 for round in range(num_rounds):
     print(f"Round {round + 1}")
     #select clients
