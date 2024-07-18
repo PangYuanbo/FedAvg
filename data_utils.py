@@ -1,6 +1,40 @@
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
+import matplotlib.pyplot as plt
+import IPython
+import torchvision
+
+def fetch_dataset():
+    """ Collect MNIST """
+    transform = torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize((0.1307,), (0.3081,))
+    ])
+
+    train_data = torchvision.datasets.MNIST(
+        './data', train=True, download=True, transform=transform
+    )
+
+    test_data = torchvision.datasets.MNIST(
+        './data', train=False, download=True, transform=transform
+    )
+
+    return train_data, test_data
+def view_10(img, label):
+    """ view 10 labelled examples from tensor"""
+    fig, axes = plt.subplots(2, 5, figsize=(10, 4))
+    for i, ax in enumerate(axes.flat):
+        ax.axis("off")
+        ax.set_title(label[i].cpu().numpy())
+        ax.imshow(img[i][0], cmap="gray")
+    IPython.display.display(fig)
+    plt.close(fig)
+
+
+def num_params(model):
+    """ """
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 class CustomSubset(Dataset):
     def __init__(self, dataset, indices):

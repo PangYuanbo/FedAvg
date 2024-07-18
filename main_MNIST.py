@@ -32,8 +32,8 @@ C = 0.1  # Fraction of clients
 B = 10  # Batch size
 E = 1  # Number of local epochs
 l = 0.1  # Learning rate
-ifIID = True  # If IID or non-IID
-num_rounds = 87  # Number of rounds
+ifIID = False  # If IID or non-IID
+num_rounds = 664  # Number of rounds
 
 # Main Federated Learning Loop
 start = time.time()
@@ -53,7 +53,7 @@ for round in range(num_rounds):
     for client_idx, client_model in enumerate(clients):
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
             param.data = center_param.data.clone()
-        dataloader = DataLoader(data[client_idx], batch_size=B, shuffle=True)
+        dataloader = DataLoader(data[client_idx],batch_size=B, shuffle=True)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(models[client_model].parameters(), lr=l)
         train(models[client_model], dataloader, criterion, optimizer, E)
@@ -64,10 +64,12 @@ for round in range(num_rounds):
     for client_model in clients:
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
             center_param.data += param.data / len(clients)
+    print("loss")
+    test(global_model, DataLoader(test_data, shuffle=True))
 
 print("Finished FedAvg")
 print(f"Time taken: {time.time() - start} seconds")
 
 # Test the global model
-print("Testing the center model")
+print("Testing the global model")
 test(global_model, DataLoader(test_data, shuffle=True))
