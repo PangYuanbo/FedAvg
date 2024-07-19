@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -28,7 +29,7 @@ global_model = DoubleNN(device).to(device)
 
 
 # Parameters for Federated Learning
-C = 0.1  # Fraction of clients
+C = 0.5  # Fraction of clients
 B = 10  # Batch size
 E = 1  # Number of local epochs
 l = 0.1  # Learning rate
@@ -37,6 +38,7 @@ num_rounds = 664  # Number of rounds
 
 # Main Federated Learning Loop
 start = time.time()
+training_losses = []
 for round in range(num_rounds):
     print(f"Round {round + 1}")
 
@@ -65,7 +67,11 @@ for round in range(num_rounds):
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
             center_param.data += param.data / len(clients)
     print("loss")
-    test(global_model, DataLoader(test_data, shuffle=True))
+
+    loss=test(global_model, DataLoader(test_data, shuffle=True))
+    training_losses.append(loss)
+
+np.save('2NN_Noiid_0.5_10_1',np.array(training_losses))
 
 print("Finished FedAvg")
 print(f"Time taken: {time.time() - start} seconds")
