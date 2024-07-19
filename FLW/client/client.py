@@ -6,10 +6,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.transforms import Compose, ToTensor, Normalize
-from torch.utils.data import DataLoader
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import CIFAR10
-
 # #############################################################################
 # Regular PyTorch pipeline: nn.Module, train, test, and DataLoader
 # #############################################################################
@@ -42,10 +41,18 @@ def get_parameters(net) -> List[np.ndarray]:
     return [val.cpu().numpy() for _, val in net.state_dict().items()]
 
 
-def set_parameters(net, parameters: List[np.ndarray]):
+def set_parameters(net, parameters: List[np.ndarray],drop:bool=False):
     params_dict = zip(net.state_dict().keys(), parameters)
-    state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
-    net.load_state_dict(state_dict, strict=True)
+    # Load the state dictionary of the current model
+    current_state_dict = net.state_dict()
+    source_state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
+    if drop:
+        filtered_state_dict = {k: v for k, v in source_state_dict.items() if
+                               'fc3' not in k}
+    else:
+        filtered_state_dict=source_state_dict
+    current_state_dict.update(filtered_state_dict)
+    net.load_state_dict(current_state_dict, strict=True)
 
 
 def train(net, trainloader, epochs: int):
@@ -89,44 +96,73 @@ def test(net, testloader):
     return loss, accuracy
 
 
-def load_data():
-    """Load CIFAR-10 (training and test set)."""
-    trf = Compose([ToTensor(), Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-    trainset = CIFAR10("./data", train=True, download=True, transform=trf)
-    testset = CIFAR10("./data", train=False, download=True, transform=trf)
-    return DataLoader(trainset, batch_size=32, shuffle=True), DataLoader(testset)
+def load_datasets(num_clients: int):
+    # Download and transform CIFAR-10 (train and test)
+    transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+    )
+    trainset = CIFAR10("./data", train=True, download=True, transform=transform)
+    testset = CIFAR10("./data", train=False, download=True, transform=transform)
+
+    # Split training set into `num_clients` partitions to simulate different local datasets
+    partition_size = len(trainset) // num_clients
+    lengths = [partition_size] * num_clients
+    datasets = random_split(trainset, lengths, torch.Generator().manual_seed(42))
+
+    # Split each partition into train/val and create DataLoader
+    trainloaders = []
+    valloaders = []
+    for ds in datasets:
+        len_val = len(ds) // 10  # 10 % validation set
+        len_train = len(ds) - len_val
+        lengths = [len_train, len_val]
+        ds_train, ds_val = random_split(ds, lengths, torch.Generator().manual_seed(42))
+        trainloaders.append(DataLoader(ds_train, batch_size=32, shuffle=True))
+        valloaders.append(DataLoader(ds_val, batch_size=32))
+    testloader = DataLoader(testset, batch_size=32)
+    return trainloaders, valloaders, testloader
 
 
 # #############################################################################
 # Federating the pipeline with Flower
 # #############################################################################
-
+NUM_CLIENTS=10
 # Load model and data (simple CNN, CIFAR-10)
 net = Net().to(DEVICE)
-trainloader, testloader = load_data()
+trainloaders,valloaders, testloaders = load_datasets(NUM_CLIENTS)
 
 
 # Define Flower client
-class FlowerClient(fl.client.NumPyClient):
-    def get_parameters(self, config):
-        return [val.cpu().numpy() for _, val in net.state_dict().items()]
 
-    def set_parameters(self, parameters):
-        params_dict = zip(net.state_dict().keys(), parameters)
-        state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
-        net.load_state_dict(state_dict, strict=True)
+class FlowerClient(fl.client.NumPyClient):
+    def __init__(self, cid, net, trainloader, valloader):
+        self.cid = cid
+        self.net = net
+        self.trainloader = trainloader
+        self.valloader = valloader
+
+    def get_parameters(self, config):
+        print(f"[Client {self.cid}] get_parameters")
+        return get_parameters(self.net)
 
     def fit(self, parameters, config):
-        self.set_parameters(parameters)
-        train(net, trainloader, epochs=1)
-        return self.get_parameters(config={}), len(trainloader.dataset), {}
+        print(f"[Client {self.cid}] fit, config: {config}")
+        set_parameters(self.net, parameters,True)
+        train(self.net, self.trainloader, epochs=1)
+        return get_parameters(self.net), len(self.trainloader), {}
 
     def evaluate(self, parameters, config):
-        self.set_parameters(parameters)
-        loss, accuracy = test(net, testloader)
-        return float(loss), len(testloader.dataset), {"accuracy": float(accuracy)}
+        print(f"[Client {self.cid}] evaluate, config: {config}")
+        set_parameters(self.net, parameters,True)
+        loss, accuracy = test(self.net, self.valloader)
+        return float(loss), len(self.valloader), {"accuracy": float(accuracy)}
 
 
+def client_fn(cid) -> FlowerClient:
+    net = Net().to(DEVICE)
+    trainloader = trainloaders[int(cid)]
+    valloader = valloaders[int(cid)]
+    return FlowerClient(cid, net, trainloader, valloader)
 # Start Flower client
 # fl.client.start_numpy_client(server_address="127.0.0.1:8080", client=FlowerClient())
 # Create FedAvg strategy
@@ -197,7 +233,7 @@ class FedCustom(fl.server.strategy.Strategy):
         fit_configurations = []
         for idx, client in enumerate(clients):
             if idx < half_clients:
-                fit_configurations.append(client, FitIns(parameters, standard_config))
+                fit_configurations.append((client, FitIns(parameters, standard_config)))
             else:
                 fit_configurations.append(
                     (client, FitIns(parameters, higher_lr_config))
@@ -282,5 +318,12 @@ class FedCustom(fl.server.strategy.Strategy):
 # create strategy
 
 # Start Flower server
-fl.server.start_server(config=fl.server.ServerConfig(num_rounds=3), strategy=FedCustom())
+client_resources = None
 # fl.simulation.start_simulation()
+fl.simulation.start_simulation(
+    client_fn=client_fn,
+    num_clients=10,
+    config=fl.server.ServerConfig(num_rounds=20),
+    strategy=FedCustom(),  # <-- pass the new strategy here
+    client_resources=client_resources,
+)
