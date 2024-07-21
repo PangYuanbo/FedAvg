@@ -3,7 +3,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import time
-from models import DoubleNN
+from models import DoubleNN,CNN
 from data_utils import partition_data_iid, partition_data_noniid
 from train_test import train, test
 from torch.utils.data import DataLoader
@@ -24,17 +24,17 @@ train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True
 test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
 
 # Global and Client Model Initialization
-models = [DoubleNN(device).to(device) for _ in range(100)]
-global_model = DoubleNN(device).to(device)
+models = [CNN(device).to(device) for _ in range(100)]
+global_model = CNN(device).to(device)
 
 
 # Parameters for Federated Learning
-C = 0.5  # Fraction of clients
+C = 1  # Fraction of clients
 B = 10  # Batch size
-E = 1  # Number of local epochs
+E = 5  # Number of local epochs
 l = 0.1  # Learning rate
 ifIID = False  # If IID or non-IID
-num_rounds = 664  # Number of rounds
+num_rounds = 200  # Number of rounds
 
 # Main Federated Learning Loop
 start = time.time()
@@ -71,7 +71,7 @@ for round in range(num_rounds):
     loss=test(global_model, DataLoader(test_data, shuffle=True))
     training_losses.append(loss)
 
-np.save('2NN_Noiid_0.5_10_1',np.array(training_losses))
+np.save('CNN_Noiid_1_10_1',np.array(training_losses))
 
 print("Finished FedAvg")
 print(f"Time taken: {time.time() - start} seconds")

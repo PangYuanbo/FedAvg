@@ -93,7 +93,7 @@ By including these instructions in the README file, you provide clear guidance o
  ｜0.1 | False  | 10 | 664    | 1 |0.1||1919｜97.38%|
  ｜0.2 | False  | 10 | 664    | 1 |0.1||2041｜97.69%|
  ｜0.5 | False  | 10 | 664    | 1 |0.1||3055|97.8%|
- ｜1   | False  | 10 | 380    | 1 |0.1||---｜
+ ｜1   | False  | 10 | 664    | 1 |0.1||6630｜97.92%｜
 
 
 ## CNN (CUDA:4070tis)
@@ -109,7 +109,7 @@ By including these instructions in the README file, you provide clear guidance o
 ｜0.2| True  | ∞ | 18     | 5 |0.1||---｜
 ｜0.5| True  | ∞ | 18     | 5 |0.1||---｜
 ｜1| True  | ∞ | 16     | 5 |0.1||---｜
-
+### (M2)
 ｜C | IsIID | B | Rounds | E |L|Time
 |--|-------|---|--------|---|---|---|
 |0| False | ∞ | 1181   | 5 |0.1||131.44｜97.42%|
