@@ -29,7 +29,7 @@ global_model = CNN(device).to(device)
 
 
 # Parameters for Federated Learning
-C = 1  # Fraction of clients
+C = 0.5  # Fraction of clients
 B = 10  # Batch size
 E = 5  # Number of local epochs
 l = 0.1  # Learning rate
@@ -71,7 +71,7 @@ for round in range(num_rounds):
     loss=test(global_model, DataLoader(test_data, shuffle=True))
     training_losses.append(loss)
 
-np.save('CNN_Noiid_1_10_1',np.array(training_losses))
+np.save('CNN_Noiid_0.5_10_1',np.array(training_losses))
 
 print("Finished FedAvg")
 print(f"Time taken: {time.time() - start} seconds")
