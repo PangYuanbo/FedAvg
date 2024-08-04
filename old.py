@@ -24,8 +24,8 @@ train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True
 test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
 
 # Global and Client Model Initialization
-models = [DoubleNN(device).to(device) for _ in range(100)]
-global_model = DoubleNN(device).to(device)
+models = [CNN(device).to(device) for _ in range(100)]
+global_model = CNN(device).to(device)
 
 
 # Parameters for Federated Learning
