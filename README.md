@@ -121,4 +121,4 @@ By including these instructions in the README file, you provide clear guidance o
 ｜0.1| False  | ∞ | 206    | 5 |0.1||---｜
 ｜0.2| False  | ∞ | 200    | 5 |0.1||---｜
 ｜0.5| False  | ∞ | 261    | 5 |0.1||---｜
-｜1| False  | ∞ | 97     | 5 |0.1||---｜
+｜1| False  | ∞ | 200    | 5 |0.1||25950｜99.3%|

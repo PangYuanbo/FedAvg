@@ -61,6 +61,15 @@ def main():
             p.start()
             processes.append(p)
         print(len(processes))
+
+        for _ in range(num_processes):
+            trained_params = queue.get()
+
+            # print(trained_params)
+            for client, params in trained_params.items():
+                models[client].load_state_dict(params)
+                print(f"Client {client} updated")
+
         for p in processes:
             print("p",p.name)
             p.join(timeout=10)
@@ -77,13 +86,7 @@ def main():
         # test_param=queue.get()
         # print("test_param",test_param.keys())
         # Gather trained parameters from all processes
-        for _ in range(num_processes):
-            trained_params = queue.get()
 
-            # print(trained_params)
-            for client, params in trained_params.items():
-                models[client].load_state_dict(params)
-                print(f"Client {client} updated")
 
 
 
