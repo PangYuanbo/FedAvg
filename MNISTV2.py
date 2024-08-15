@@ -31,12 +31,12 @@ def main():
 
 
     # Parameters for Federated Learning
-    C = 0.5  # Fraction of clients
+    C = 1  # Fraction of clients
     B = 50 # Batch size
     E = 1  # Number of local epochs
     l = 0.1  # Learning rate
     ifIID = False  # If IID or non-IID
-    num_rounds = 664  # Number of rounds
+    num_rounds = 200  # Number of rounds
 
     # Main Federated Learning Loop
     start = time.time()
@@ -61,35 +61,24 @@ def main():
             p.start()
             processes.append(p)
         print(len(processes))
-
+        # Update the global_model
+        for param in global_model.parameters():
+            param.data = torch.zeros_like(param.data)
         for _ in range(num_processes):
             trained_params = queue.get()
 
             # print(trained_params)
             for client, params in trained_params.items():
                 models[client].load_state_dict(params)
-                print(f"Client {client} updated")
+                # print(f"Client {client} updated")
 
         for p in processes:
             print("p",p.name)
             p.join(timeout=10)
-            if p.is_alive():
-                print(f"Thread {p.name} did not finish in time")
-            else:
-                print(f"Thread {p.name} finished in time")
-
-        print("queue")
-        # Update the global_model
-        for param in global_model.parameters():
-            param.data = torch.zeros_like(param.data)
-        print("queue")
-        # test_param=queue.get()
-        # print("test_param",test_param.keys())
-        # Gather trained parameters from all processes
-
-
-
-
+            # if p.is_alive():
+            #     print(f"Thread {p.name} did not finish in time")
+            # else:
+            #     print(f"Thread {p.name} finished in time")
 
         for client_model in clients:
             for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
@@ -99,7 +88,7 @@ def main():
         loss=test(global_model, DataLoader(test_data, shuffle=True))
         training_losses.append(loss)
 
-    np.save('CNN_Noiid_0.5_10_1',np.array(training_losses))
+    # np.save('CNN_Noiid_0.5_10_1',np.array(training_losses))
 
     print("Finished FedAvg")
     print(f"Time taken: {time.time() - start} seconds")
