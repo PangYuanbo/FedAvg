@@ -8,7 +8,7 @@ from models import DoubleNN,CNN
 def train_process(number,id,clients_process,models,data,B,E,l,global_model,queue):
     for client_idx, client_model in enumerate(clients_process):
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
-            param.data = center_param.data.clone()
+            param.data = center_param.data.clone().detach()
         dataloader = DataLoader(data[number+client_idx],batch_size=B, shuffle=True)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(models[client_model].parameters(), lr=l)

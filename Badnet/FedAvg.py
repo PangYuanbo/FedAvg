@@ -9,6 +9,8 @@ from train_test import test, train_process
 from torch.utils.data import DataLoader
 
 import torch.multiprocessing as mp
+
+
 def main():
     # Device configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,16 +26,15 @@ def main():
 
     train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
-    attack_data=torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
+    attack_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
 
     # Global and Client Model Initialization
     models = [CNN(device).to(device) for _ in range(100)]
     global_model = CNN(device).to(device)
 
-
     # Parameters for Federated Learning
     C = 0.5  # Fraction of clients
-    B = 50 # Batch size
+    B = 50  # Batch size
     E = 1  # Number of local epochs
     l = 0.1  # Learning rate
     ifIID = True  # If IID or non-IID
@@ -47,13 +48,13 @@ def main():
         queue = mp.Queue()
         # Select clients
         clients = torch.randperm(len(models))[:int(C * len(models))]
-        backdoor_clients=torch.randperm(len(models))[:int(C * len(models))]
+        backdoor_clients = torch.randperm(len(models))[:int(C * len(models))]
         normal_clients = set(clients.tolist()) - set(backdoor_clients.tolist())
         normal_clients = torch.tensor(list(normal_clients))
-        normal_clients_number=len(normal_clients)
-        backdoor_clients_number=len(backdoor_clients)
-        normal_clients_process=normal_clients_number//num_processes  #number of clients per process
-        backdoor_clients_process=backdoor_clients_number//num_processes
+        normal_clients_number = len(normal_clients)
+        backdoor_clients_number = len(backdoor_clients)
+        normal_clients_process = normal_clients_number // num_processes  #number of clients per process
+        backdoor_clients_process = backdoor_clients_number // num_processes
         # Prepare data
         if ifIID:
             data = partition_data_iid(train_data, normal_clients_number)
@@ -65,8 +66,11 @@ def main():
         processes = []
 
         for process_idx in range(num_processes):
-            clients_process = clients[process_idx * normal_clients_process : min((process_idx + 1) * normal_clients, normal_clients_number)]
-            p=mp.Process(target=train_process,args=(process_idx*normal_clients_process,process_idx,clients_process,models,data,B,E,l,global_model,queue))
+            clients_process = clients[process_idx * normal_clients_process: min((process_idx + 1) * normal_clients,
+                                                                                normal_clients_number)]
+            p = mp.Process(target=train_process, args=(
+            process_idx * normal_clients_process, process_idx, clients_process, models, data, B, E, l, global_model,
+            queue))
             p.start()
             processes.append(p)
 
@@ -82,7 +86,7 @@ def main():
                 print(f"Client {client} updated")
 
         for p in processes:
-            print("p",p.name)
+            print("p", p.name)
             p.join(timeout=10)
 
         for client_model in clients:
@@ -92,8 +96,11 @@ def main():
         # Attack
         processes = []
         for process_idx in range(num_processes):
-            clients_process = clients[process_idx * backdoor_clients_process : min((process_idx + 1) * backdoor_clients, backdoor_clients_number)]
-            p=mp.Process(target=train_process,args=(process_idx*backdoor_clients_process,process_idx,clients_process,models,data,B,E,l,global_model,queue))
+            clients_process = clients[process_idx * backdoor_clients_process: min((process_idx + 1) * backdoor_clients,
+                                                                                  backdoor_clients_number)]
+            p = mp.Process(target=train_process, args=(
+            process_idx * backdoor_clients_process, process_idx, clients_process, models, backdoor_data, B, E, l, global_model,
+            queue))
             p.start()
             processes.append(p)
 
@@ -109,17 +116,17 @@ def main():
                 print(f"Client {client} updated")
 
         for p in processes:
-            print("p",p.name)
+            print("p", p.name)
             p.join(timeout=10)
 
         for client_model in clients:
             for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
                 global_param.data += param.data / len(clients)
 
-        loss=test(global_model, DataLoader(test_data, shuffle=True))
+        loss = test(global_model, DataLoader(test_data, shuffle=True))
         training_losses.append(loss)
 
-    np.save('CNN_Noiid_0.5_10_1',np.array(training_losses))
+    np.save('CNN_Noiid_0.5_10_1', np.array(training_losses))
 
     print("Finished FedAvg")
     print(f"Time taken: {time.time() - start} seconds")
@@ -127,6 +134,11 @@ def main():
     # Test the global model
     print("Testing the global model")
     test(global_model, DataLoader(test_data, shuffle=True))
+
+
+    # Test the badtest model
+    print("Testing the badtest model")
+    test(global_model, DataLoader(attack_data, shuffle=True))
 
 if __name__ == "__main__":
     main()

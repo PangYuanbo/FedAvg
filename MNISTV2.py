@@ -15,7 +15,7 @@ def main():
     # device =torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print("Using device:", device)
     torch.set_num_threads(8)
-    num_processes = 6
+    num_processes = 8
     # Transformations and Dataset Loading
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -83,10 +83,10 @@ def main():
         for client_model in clients:
             for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
                 global_param.data += param.data / len(clients)
-        print("loss")
 
-        loss=test(global_model, DataLoader(test_data, shuffle=True))
-        training_losses.append(loss)
+
+        # loss=test(global_model, DataLoader(test_data, shuffle=True))
+        # training_losses.append(loss)
 
     # np.save('CNN_Noiid_0.5_10_1',np.array(training_losses))
 
