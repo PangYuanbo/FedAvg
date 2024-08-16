@@ -47,9 +47,9 @@ def main():
         print(f"Round {round + 1}")
         queue = mp.Queue()
         # Select clients
-        clients = torch.randperm(len(models))[:int(C * len(models))]
-        backdoor_clients = torch.randperm(len(models))[:int(C * len(models))]
-        normal_clients = set(clients.tolist()) - set(backdoor_clients.tolist())
+        total_clients_number = C * len(models)
+        backdoor_clients = torch.randperm(len(models))[:int(0.1*C * len(models))]
+        normal_clients = torch.randperm(len(models))[:int(0.9*C * len(models))]
         normal_clients = torch.tensor(list(normal_clients))
         normal_clients_number = len(normal_clients)
         backdoor_clients_number = len(backdoor_clients)
@@ -66,7 +66,7 @@ def main():
         processes = []
 
         for process_idx in range(num_processes):
-            clients_process = clients[process_idx * normal_clients_process: min((process_idx + 1) * normal_clients_process,
+            clients_process = normal_clients[process_idx * normal_clients_process: min((process_idx + 1) * normal_clients_process,
                                                                                 normal_clients_number)]
             p = mp.Process(target=train_process, args=(
             process_idx * normal_clients_process, process_idx, clients_process, models, data, B, E, l, global_model,
@@ -89,23 +89,22 @@ def main():
             print("p", p.name)
             p.join(timeout=10)
 
-        for client_model in clients:
+        for client_model in normal_clients:
             for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
-                global_param.data += param.data / len(clients)
+                global_param.data += param.data / total_clients_number
 
         # Attack
         processes = []
         for process_idx in range(num_processes):
-            clients_process = clients[process_idx * backdoor_clients_process: min((process_idx + 1) * backdoor_clients_process,
+            clients_process = backdoor_clients[process_idx * backdoor_clients_process: min((process_idx + 1) * backdoor_clients_process,
                                                                                   backdoor_clients_number)]
             p = mp.Process(target=attack_process, args=(
             process_idx * backdoor_clients_process, process_idx, clients_process, models, backdoor_data, B, E, l, global_model,
-            queue))
+            queue,"Pixel-backdoors"))
             p.start()
             processes.append(p)
 
-        for param in global_model.parameters():
-            param.data = torch.zeros_like(param.data)
+
 
         for _ in range(num_processes):
             trained_params = queue.get()
@@ -119,9 +118,9 @@ def main():
             print("p", p.name)
             p.join(timeout=10)
 
-        for client_model in clients:
+        for client_model in backdoor_clients:
             for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
-                global_param.data += param.data / len(clients)
+                global_param.data += param.data / total_clients_number
 
         loss = test(global_model, DataLoader(test_data, shuffle=True))
         training_losses.append(loss)
@@ -138,7 +137,7 @@ def main():
 
     # Test the badtest model
     print("Testing the badtest model")
-    test(global_model, DataLoader(attack_data, shuffle=True))
+    test(global_model, DataLoader(attack_test_data, shuffle=True))
 
 if __name__ == "__main__":
     main()
