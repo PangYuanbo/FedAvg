@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 import time
 from models import CNN
 from data_utils import partition_data_iid, partition_data_noniid
-from train_test import test, train_process
+from attack_train import test, train_process,attack_process
 from torch.utils.data import DataLoader
 
 import torch.multiprocessing as mp
@@ -26,6 +26,7 @@ def main():
     train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     attack_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
+    attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
 
     # Global and Client Model Initialization
     models = [CNN(device).to(device) for _ in range(100)]
@@ -37,7 +38,7 @@ def main():
     E = 1  # Number of local epochs
     l = 0.1  # Learning rate
     ifIID = True  # If IID or non-IID
-    num_rounds = 664  # Number of rounds
+    num_rounds = 50  # Number of rounds
 
     # Main Federated Learning Loop
     start = time.time()
@@ -65,7 +66,7 @@ def main():
         processes = []
 
         for process_idx in range(num_processes):
-            clients_process = clients[process_idx * normal_clients_process: min((process_idx + 1) * normal_clients,
+            clients_process = clients[process_idx * normal_clients_process: min((process_idx + 1) * normal_clients_process,
                                                                                 normal_clients_number)]
             p = mp.Process(target=train_process, args=(
             process_idx * normal_clients_process, process_idx, clients_process, models, data, B, E, l, global_model,
@@ -95,9 +96,9 @@ def main():
         # Attack
         processes = []
         for process_idx in range(num_processes):
-            clients_process = clients[process_idx * backdoor_clients_process: min((process_idx + 1) * backdoor_clients,
+            clients_process = clients[process_idx * backdoor_clients_process: min((process_idx + 1) * backdoor_clients_process,
                                                                                   backdoor_clients_number)]
-            p = mp.Process(target=train_process, args=(
+            p = mp.Process(target=attack_process, args=(
             process_idx * backdoor_clients_process, process_idx, clients_process, models, backdoor_data, B, E, l, global_model,
             queue))
             p.start()

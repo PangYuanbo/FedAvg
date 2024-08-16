@@ -4,8 +4,35 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from models import DoubleNN,CNN
 
-
-def train_atack(number,id,clients_process,models,data,B,E,l,global_model,queue):
+'''
+    attack_method:
+    1. Pixel-backdoors
+    2. Semantic-backdoors
+    3. LF-backdoors
+'''
+def attack_process(number,id,clients_process,models,data,B,E,l,global_model,queue,attack_method):
+    for client_idx, client_model in enumerate(clients_process):
+        for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
+            param.data = center_param.data.clone()
+        dataloader = DataLoader(data[number+client_idx],batch_size=B, shuffle=True)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.SGD(models[client_model].parameters(), lr=l)
+        if attack_method == "Pixel-backdoors":
+            train(models[client_model], dataloader, criterion, optimizer, E)
+        elif attack_method == "Semantic-backdoors":
+            train(models[client_model], dataloader, criterion, optimizer, E)
+            for client_model in clients_process:
+                models[client_model]=(models[client_model]-global_model)*20+global_model
+        elif attack_method == "LF-backdoors":
+            train(models[client_model], dataloader, criterion, optimizer, E)
+            for client_model in clients_process:
+                models[client_model].fc1.weight=(models[client_model].fc1.weight-global_model.fc1.weight)*20+global_model.fc1.weight
+                models[client_model].fc1.bias=(models[client_model].fc1.bias-global_model.fc1.bias)*20+global_model.fc1.bias
+    trained_params = {client_model: models[client_model].state_dict() for  client_model in clients_process}
+    queue.put(trained_params)
+    print("number",id)
+    return
+def train_process(number,id,clients_process,models,data,B,E,l,global_model,queue):
     for client_idx, client_model in enumerate(clients_process):
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
             param.data = center_param.data.clone()

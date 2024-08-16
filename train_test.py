@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from models import DoubleNN,CNN
+
 
 
 def train_process(number,id,clients_process,models,data,B,E,l,global_model,queue):
