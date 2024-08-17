@@ -3,11 +3,11 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import time
-from models import CNN
+from models import CNN,ResNet18
 from data_utils import partition_data_iid, partition_data_noniid
 from attack_train import test, train_process,attack_process
 from torch.utils.data import DataLoader
-
+from semantic_attack import load_dataset
 import torch.multiprocessing as mp
 
 
@@ -23,14 +23,16 @@ def main():
         transforms.Normalize((0.5,), (0.5,))
     ])
 
-    train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-    test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
-    attack_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
-    attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
+    # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+    # test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
+    # attack_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
+    # attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
+    train_data,test_data=load_dataset(False)
+    attack_data,attack_test_data=load_dataset(False)
 
     # Global and Client Model Initialization
-    models = [CNN(device).to(device) for _ in range(100)]
-    global_model = CNN(device).to(device)
+    models = [ResNet18(num_classes=10,device=device).to(device) for _ in range(100)]
+    global_model = ResNet18(num_classes=10,device=device).to(device)
 
     # Parameters for Federated Learning
     C = 0.5  # Fraction of clients
@@ -38,7 +40,8 @@ def main():
     E = 1  # Number of local epochs
     l = 0.1  # Learning rate
     ifIID = True  # If IID or non-IID
-    num_rounds = 50  # Number of rounds
+    num_rounds = 20  # Number of rounds
+    attack_method = "Pixel-backdoors"
 
     # Main Federated Learning Loop
     start = time.time()
@@ -48,8 +51,8 @@ def main():
         queue = mp.Queue()
         # Select clients
         total_clients_number = C * len(models)
-        backdoor_clients = torch.randperm(len(models))[:int(0.1*C * len(models))]
-        normal_clients = torch.randperm(len(models))[:int(0.9*C * len(models))]
+        backdoor_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
+        normal_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
         normal_clients = torch.tensor(list(normal_clients))
         normal_clients_number = len(normal_clients)
         backdoor_clients_number = len(backdoor_clients)
@@ -100,7 +103,7 @@ def main():
                                                                                   backdoor_clients_number)]
             p = mp.Process(target=attack_process, args=(
             process_idx * backdoor_clients_process, process_idx, clients_process, models, backdoor_data, B, E, l, global_model,
-            queue,"Pixel-backdoors"))
+            queue,attack_method))
             p.start()
             processes.append(p)
 

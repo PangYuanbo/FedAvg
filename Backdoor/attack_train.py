@@ -22,7 +22,7 @@ def attack_process(number,id,clients_process,models,data,B,E,l,global_model,queu
         elif attack_method == "Semantic-backdoors":
             train(models[client_model], dataloader, criterion, optimizer, E)
             for client_model in clients_process:
-                models[client_model]=(models[client_model]-global_model)*20+global_model
+                models[client_model]=(models[client_model]-global_model)*5+global_model
         elif attack_method == "LF-backdoors":
             train(models[client_model], dataloader, criterion, optimizer, E)
             for client_model in clients_process:
