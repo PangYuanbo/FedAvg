@@ -45,8 +45,8 @@ def main():
     # attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     # attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     # Global and Client Model Initialization
-    models = [ResNet18(num_classes=10,device=device).to(device) for _ in range(100)]
-    global_model = ResNet18(num_classes=10,device=device).to(device)
+    models = [CNN(num_classes=10,device=device).to(device) for _ in range(100)]
+    global_model = CNN(num_classes=10,device=device).to(device)
 
     # Parameters for Federated Learning
     C = 0.5  # Fraction of clients
