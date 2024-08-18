@@ -96,7 +96,10 @@ def main():
             param.data = torch.zeros_like(param.data)
 
         for _ in range(num_processes):
-            trained_params = queue.get()
+            try:
+                trained_params = queue.get(timeout=60)  # Add a timeout to prevent indefinite blocking
+            except EOFError:
+                print("EOFError: One of the processes terminated unexpectedly.")
 
             # print(trained_params)
             for client, params in trained_params.items():
