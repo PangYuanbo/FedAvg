@@ -35,28 +35,46 @@ def attack_process(number, id, clients_process, models, data, B, E, l, global_mo
                         client_model in clients_process}
     queue.put(trained_params)
     print("Completed attack process for:", id)
+
     return
 
 
-def train_process(number, id, clients_process, models, data, B, E, l, global_model, queue, device):
-    for client_idx, client_model in enumerate(clients_process):
-        # 同步模型参数
-        for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
-            param.data = center_param.data.clone()
+def attack_process(number, id, clients_process, models, data, B, E, l, global_model, queue, attack_method, device):
+    try:
+        for client_idx, client_model in enumerate(clients_process):
+            # 同步模型参数
+            for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
+                param.data = center_param.data.clone()
 
-        dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(models[client_model].parameters(), lr=l, momentum=0.9, weight_decay=5e-4)
+            dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
+            criterion = nn.CrossEntropyLoss()
+            optimizer = optim.SGD(models[client_model].parameters(), lr=l)
 
-        # 模型训练
-        train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
+            # 模型训练
+            train(models[client_model], dataloader, criterion, optimizer, device, E)
 
-     # 将训练好的参数转移到CPU后再传递
-    trained_params = {client_model: {k: v.cpu() for k, v in models[client_model].state_dict().items()} for
-                        client_model in clients_process}
-    queue.put(trained_params)
-    print("Completed training process for:", id)
+            # 执行攻击方法
+            if attack_method == "Pixel-backdoors":
+                pass
+            elif attack_method == "Semantic-backdoors":
+                for client_model in clients_process:
+                    models[client_model] = (models[client_model] - global_model) * 5 + global_model
+            elif attack_method == "LF-backdoors":
+                for client_model in clients_process:
+                    models[client_model].fc1.weight = (models[client_model].fc1.weight - global_model.fc1.weight) * 20 + global_model.fc1.weight
+                    models[client_model].fc1.bias = (models[client_model].fc1.bias - global_model.fc1.bias) * 20 + global_model.fc1.bias
+
+        # 将训练好的参数转移到CPU后再传递
+        trained_params = {client_model: {k: v.cpu() for k, v in models[client_model].state_dict().items()} for client_model in clients_process}
+        queue.put(trained_params)
+        print("Completed attack process for:", id)
+    except Exception as e:
+        print(f"Error in process {id}: {str(e)}")
+        queue.put(None)  # 传递None表示进程失败
+    finally:
+        print(f"Process {id} ended.")
     return
+
 
 
 def train(model, trainloader, criterion, optimizer, device, epochs=10):
