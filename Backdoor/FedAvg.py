@@ -17,7 +17,7 @@ def main():
     device_train = torch.device("cuda" if torch.cuda.is_available() else "mps")
     print("Using device:", device)
     torch.set_num_threads(8)
-    num_processes = 6
+    num_processes =4
     # Transformations and Dataset Loading
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -28,20 +28,20 @@ def main():
     # test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
-    # train_data,test_data=load_dataset(False)
-    # attack_data,attack_test_data=load_dataset(False)
-    transform = transforms.Compose([
-        transforms.RandomHorizontalFlip(),  # 随机水平翻转
-        transforms.RandomCrop(32, padding=4),  # 随机裁剪
-        transforms.ToTensor(),  # 转换为Tensor
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))  # 正则化
-    ])
-    print("Downloading CIFAR-10 dataset...")
-
-    train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
-    attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    train_data,test_data=load_dataset(False)
+    attack_data,attack_test_data=load_dataset(False)
+    # transform = transforms.Compose([
+    #     transforms.RandomHorizontalFlip(),  # 随机水平翻转
+    #     transforms.RandomCrop(32, padding=4),  # 随机裁剪
+    #     transforms.ToTensor(),  # 转换为Tensor
+    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))  # 正则化
+    # ])
+    # print("Downloading CIFAR-10 dataset...")
+    #
+    # train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    # test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    # attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    # attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     # Global and Client Model Initialization
     models = [ResNet18(num_classes=10,device=device).to(device) for _ in range(100)]
     global_model = ResNet18(num_classes=10,device=device).to(device)
@@ -49,10 +49,10 @@ def main():
     # Parameters for Federated Learning
     C = 0.5  # Fraction of clients
     B = 50  # Batch size
-    E = 1  # Number of local epochs
+    E = 5  # Number of local epochs
     l = 0.1  # Learning rate
     ifIID = True  # If IID or non-IID
-    num_rounds = 20  # Number of rounds
+    num_rounds = 50  # Number of rounds
     attack_method = "Pixel-backdoors"
 
     # Main Federated Learning Loop
@@ -85,7 +85,7 @@ def main():
                                                                                 normal_clients_number)]
             p = mp.Process(target=train_process, args=(
             process_idx * normal_clients_process, process_idx, clients_process, models, data, B, E, l, global_model,
-            queue))
+            queue,device_train))
             p.start()
             processes.append(p)
 

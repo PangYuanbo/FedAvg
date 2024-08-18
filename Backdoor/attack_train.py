@@ -42,8 +42,8 @@ def train_process(number, id, clients_process, models, data, B, E, l, global_mod
             param.data = center_param.data.clone()
         dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(models[client_model].parameters(), lr=l)
-        train(models[client_model], dataloader, criterion, optimizer, device,E)
+        optimizer = optim.SGD(models[client_model].parameters(), lr=l,momentum=0.9, weight_decay=5e-4)
+        train(models[client_model], dataloader, criterion, optimizer, device,epochs=E)
         # print(f"Client {client_model} trained")
     # print ("clients_process",len(clients_process))
     trained_params = {client_model: models[client_model].state_dict() for client_model in clients_process}
@@ -54,6 +54,7 @@ def train_process(number, id, clients_process, models, data, B, E, l, global_mod
 
 def train(model, trainloader, criterion, optimizer,device, epochs=10):
     # print("device",device)
+    global running_loss
     model.to(device)  # 将模型移动到设备上
     model.train()  # 设置模型为训练模式
 
@@ -70,6 +71,7 @@ def train(model, trainloader, criterion, optimizer,device, epochs=10):
 
             running_loss += loss.item()
 
+    # print("total_loss",running_loss/len(trainloader))
     model.to("cpu")  # 将模型移动回CPU
 
 
@@ -87,13 +89,12 @@ def test(model, testloader,device):
     total = 0
     with torch.no_grad():  # 评估模式下不需要计算梯度
         for data in testloader:
-            # images, labels = data[0].to(device), data[1].to(device)  # 将数据移动到设备上
-            images, labels = data[0], data[1]  # 将数据移动到设备上
+            images, labels = data[0].to(device), data[1].to(device)  # 将数据移动到设备上
             outputs = model(images)  # 前向传播
             _, predicted = torch.max(outputs.data, 1)  # 获取预测结果
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-    # model.to("cpu")  # 将模型移动回CPU
+    model.to("cpu")  # 将模型移动回CPU
     accuracy = 100 * correct / total
     print(f'Accuracy of the network on the test images: {accuracy}%')
     return correct / total
