@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from semantic_attack import load_dataset
 import torch.multiprocessing as mp
 
-
+import torchvision.datasets as datasets
 def main():
     # Device configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -27,9 +27,20 @@ def main():
     # test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
-    train_data,test_data=load_dataset(False)
-    attack_data,attack_test_data=load_dataset(False)
+    # train_data,test_data=load_dataset(False)
+    # attack_data,attack_test_data=load_dataset(False)
+    transform = transforms.Compose([
+        transforms.RandomHorizontalFlip(),  # 随机水平翻转
+        transforms.RandomCrop(32, padding=4),  # 随机裁剪
+        transforms.ToTensor(),  # 转换为Tensor
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))  # 正则化
+    ])
+    print("Downloading CIFAR-10 dataset...")
 
+    train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     # Global and Client Model Initialization
     models = [ResNet18(num_classes=10,device=device).to(device) for _ in range(100)]
     global_model = ResNet18(num_classes=10,device=device).to(device)
