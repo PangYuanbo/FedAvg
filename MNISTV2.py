@@ -12,6 +12,8 @@ import torch.multiprocessing as mp
 def main():
     # Device configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        mp.set_start_method('spawn')
     # device =torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print("Using device:", device)
     torch.set_num_threads(8)
