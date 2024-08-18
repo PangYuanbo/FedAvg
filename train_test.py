@@ -23,11 +23,8 @@ def train_process(number,id,clients_process,models,data,B,E,l,global_model,queue
 
 def train(model, trainloader, criterion, optimizer, epochs=10):
     # 检查MPS设备是否可用
-    if torch.backends.mps.is_available():
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
-    # print("device",device)
+    device = torch.device("cuda" if torch.cuda.is_available() else "mps")
+    print("device",device)
     model.to(device)  # 将模型移动到设备上
     model.train()  # 设置模型为训练模式
 
@@ -50,13 +47,8 @@ def train(model, trainloader, criterion, optimizer, epochs=10):
 
 
 def test(model, testloader):
-    # 检查MPS设备是否可用
-    # if torch.backends.mps.is_available():
-    #     device = torch.device("mps")
-    # else:
-    #     device = torch.device("cpu")
-
-    # model.to(device)  # 将模型移动到设备上
+    device = torch.device("cuda" if torch.cuda.is_available() else "mps")
+    model.to(device)  # 将模型移动到设备上
     model.eval()  # 设置模型为评估模式
 
     correct = 0
@@ -69,7 +61,7 @@ def test(model, testloader):
             _, predicted = torch.max(outputs.data, 1)  # 获取预测结果
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-    # model.to("cpu")  # 将模型移动回CPU
+    model.to("cpu")  # 将模型移动回CPU
     accuracy = 100 * correct / total
     print(f'Accuracy of the network on the test images: {accuracy}%')
     return correct / total
