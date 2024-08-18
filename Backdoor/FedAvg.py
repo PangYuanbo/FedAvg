@@ -97,7 +97,7 @@ def main():
 
         for _ in range(num_processes):
             try:
-                trained_params = queue.get(timeout=60)  # Add a timeout to prevent indefinite blocking
+                trained_params = queue.get  # Add a timeout to prevent indefinite blocking
             except EOFError:
                 print("EOFError: One of the processes terminated unexpectedly.")
 
