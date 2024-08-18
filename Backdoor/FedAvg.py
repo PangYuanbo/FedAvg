@@ -13,7 +13,7 @@ import torch.multiprocessing as mp
 import torchvision.datasets as datasets
 def main():
     # Device configuration
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device( "cpu")
     device_train = torch.device("cuda" if torch.cuda.is_available() else "mps")
     print("Using device:", device)
     torch.set_num_threads(8)
