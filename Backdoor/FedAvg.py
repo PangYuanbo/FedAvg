@@ -14,6 +14,7 @@ import torchvision.datasets as datasets
 def main():
     # Device configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device_train = torch.device("cuda" if torch.cuda.is_available() else "mps")
     print("Using device:", device)
     torch.set_num_threads(8)
     num_processes = 6
@@ -114,7 +115,7 @@ def main():
                                                                                   backdoor_clients_number)]
             p = mp.Process(target=attack_process, args=(
             process_idx * backdoor_clients_process, process_idx, clients_process, models, backdoor_data, B, E, l, global_model,
-            queue,attack_method))
+            queue,attack_method,device_train))
             p.start()
             processes.append(p)
 
@@ -136,7 +137,7 @@ def main():
             for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
                 global_param.data += param.data / total_clients_number
 
-        loss = test(global_model, DataLoader(test_data, shuffle=True))
+        loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
         training_losses.append(loss)
 
     np.save('CNN_Noiid_0.5_10_1', np.array(training_losses))

@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from models import DoubleNN,CNN
 
 '''
     attack_method:
@@ -10,50 +9,50 @@ from models import DoubleNN,CNN
     2. Semantic-backdoors
     3. LF-backdoors
 '''
-def attack_process(number,id,clients_process,models,data,B,E,l,global_model,queue,attack_method):
+
+
+def attack_process(number, id, clients_process, models, data, B, E, l, global_model, queue, attack_method,device):
     for client_idx, client_model in enumerate(clients_process):
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
             param.data = center_param.data.clone()
-        dataloader = DataLoader(data[number+client_idx],batch_size=B, shuffle=True)
+        dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(models[client_model].parameters(), lr=l)
+        train(models[client_model], dataloader, criterion, optimizer,device, E)
         if attack_method == "Pixel-backdoors":
-            train(models[client_model], dataloader, criterion, optimizer, E)
+            pass
         elif attack_method == "Semantic-backdoors":
-            train(models[client_model], dataloader, criterion, optimizer, E)
             for client_model in clients_process:
-                models[client_model]=(models[client_model]-global_model)*5+global_model
+                models[client_model] = (models[client_model] - global_model) * 5 + global_model
         elif attack_method == "LF-backdoors":
-            train(models[client_model], dataloader, criterion, optimizer, E)
             for client_model in clients_process:
-                models[client_model].fc1.weight=(models[client_model].fc1.weight-global_model.fc1.weight)*20+global_model.fc1.weight
-                models[client_model].fc1.bias=(models[client_model].fc1.bias-global_model.fc1.bias)*20+global_model.fc1.bias
-    trained_params = {client_model: models[client_model].state_dict() for  client_model in clients_process}
+                models[client_model].fc1.weight = (models[
+                                                       client_model].fc1.weight - global_model.fc1.weight) * 20 + global_model.fc1.weight
+                models[client_model].fc1.bias = (models[
+                                                     client_model].fc1.bias - global_model.fc1.bias) * 20 + global_model.fc1.bias
+    trained_params = {client_model: models[client_model].state_dict() for client_model in clients_process}
     queue.put(trained_params)
-    print("number",id)
+    print("number", id)
     return
-def train_process(number,id,clients_process,models,data,B,E,l,global_model,queue):
+
+
+def train_process(number, id, clients_process, models, data, B, E, l, global_model, queue,device):
     for client_idx, client_model in enumerate(clients_process):
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
             param.data = center_param.data.clone()
-        dataloader = DataLoader(data[number+client_idx],batch_size=B, shuffle=True)
+        dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(models[client_model].parameters(), lr=l)
-        train(models[client_model], dataloader, criterion, optimizer, E)
+        train(models[client_model], dataloader, criterion, optimizer, device,E)
         # print(f"Client {client_model} trained")
     # print ("clients_process",len(clients_process))
-    trained_params = {client_model: models[client_model].state_dict() for  client_model in clients_process}
+    trained_params = {client_model: models[client_model].state_dict() for client_model in clients_process}
     queue.put(trained_params)
-    print("number",id)
+    print("number", id)
     return
 
 
-def train(model, trainloader, criterion, optimizer, epochs=10):
-    # 检查MPS设备是否可用
-    if torch.backends.mps.is_available():
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
+def train(model, trainloader, criterion, optimizer,device, epochs=10):
     # print("device",device)
     model.to(device)  # 将模型移动到设备上
     model.train()  # 设置模型为训练模式
@@ -74,16 +73,14 @@ def train(model, trainloader, criterion, optimizer, epochs=10):
     model.to("cpu")  # 将模型移动回CPU
 
 
-
-
-def test(model, testloader):
+def test(model, testloader,device):
     # 检查MPS设备是否可用
     # if torch.backends.mps.is_available():
     #     device = torch.device("mps")
     # else:
     #     device = torch.device("cpu")
 
-    # model.to(device)  # 将模型移动到设备上
+    model.to(device)  # 将模型移动到设备上
     model.eval()  # 设置模型为评估模式
 
     correct = 0
