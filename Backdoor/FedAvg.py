@@ -30,8 +30,8 @@ def main():
     # test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
-    train_data,test_data=load_dataset(False)
-    attack_data,attack_test_data=load_dataset(False)
+    # train_data,test_data=load_dataset(False)
+    # attack_data,attack_test_data=load_dataset(False)
     # transform = transforms.Compose([
     #     transforms.RandomHorizontalFlip(),  # 随机水平翻转
     #     transforms.RandomCrop(32, padding=4),  # 随机裁剪
@@ -40,20 +40,20 @@ def main():
     # ])
     # print("Downloading CIFAR-10 dataset...")
     #
-    # train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    # test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
-    # attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    # attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    # Global and Client Model Initialization
-    models = [CNN(num_classes=10,device=device).to(device) for _ in range(100)]
-    global_model = CNN(num_classes=10,device=device).to(device)
+    train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    #Global and Client Model Initialization
+    models = [ResNet18(num_classes=10,device=device).to(device) for _ in range(100)]
+    global_model = ResNet18(num_classes=10,device=device).to(device)
 
     # Parameters for Federated Learning
     C = 0.5  # Fraction of clients
     B = 50  # Batch size
     E = 5  # Number of local epochs
-    l = 0.1  # Learning rate
-    ifIID = True  # If IID or non-IID
+    l = 0.01  # Learning rate
+    ifIID = False  # If IID or non-IID
     num_rounds = 50  # Number of rounds
     attack_method = "Pixel-backdoors"
 
@@ -78,7 +78,7 @@ def main():
             backdoor_data = partition_data_iid(attack_data, backdoor_clients_number)
         else:
             data = partition_data_noniid(train_data, normal_clients_number, 200)
-            backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 200)
+            backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 50)
 
         processes = []
 
@@ -149,6 +149,7 @@ def main():
 
         loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
         training_losses.append(loss)
+        print("global model test loss:",loss)
 
     np.save('CNN_Noiid_0.5_10_1', np.array(training_losses))
 
