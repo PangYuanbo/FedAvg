@@ -15,6 +15,8 @@ def main():
     # Device configuration
     device = torch.device( "cpu")
     device_train = torch.device("cuda" if torch.cuda.is_available() else "mps")
+    if torch.cuda.is_available():
+        mp.set_start_method('spawn')
     print("Using device:", device)
     torch.set_num_threads(8)
     num_processes =4
