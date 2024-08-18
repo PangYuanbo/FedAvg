@@ -89,6 +89,7 @@ def main():
             p.start()
             processes.append(p)
 
+        print("Waiting for processes to finish")
         for param in global_model.parameters():
             param.data = torch.zeros_like(param.data)
 
