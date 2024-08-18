@@ -104,8 +104,11 @@ def main():
                 print(f"Client {client} updated")
 
         for p in processes:
-            print("p", p.name)
             p.join(timeout=10)
+            if p.is_alive():
+                print(f"Thread {p.name} did not finish in time")
+            else:
+                print(f"Thread {p.name} finished in time")
 
         for client_model in normal_clients:
             for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
