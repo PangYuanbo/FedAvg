@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 
 def attack_process(number, id, clients_process, models, data, B, E, l, global_model, queue, attack_method,device):
-    print("number", id)
+
     for client_idx, client_model in enumerate(clients_process):
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
             param.data = center_param.data.clone()
@@ -54,7 +54,7 @@ def train_process(number, id, clients_process, models, data, B, E, l, global_mod
 
 
 def train(model, trainloader, criterion, optimizer,device, epochs=10):
-    # print("device",device)
+    print("device",device)
     global running_loss
     model.to(device)  # 将模型移动到设备上
     model.train()  # 设置模型为训练模式
