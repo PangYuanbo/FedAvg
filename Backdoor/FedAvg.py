@@ -97,7 +97,7 @@ def main():
 
         for _ in range(num_processes):
             try:
-                trained_params = queue.get  # Add a timeout to prevent indefinite blocking
+                trained_params = queue.get()  # Add a timeout to prevent indefinite blocking
             except EOFError:
                 print("EOFError: One of the processes terminated unexpectedly.")
 
@@ -106,6 +106,7 @@ def main():
                 models[client].load_state_dict(params)
                 print(f"Client {client} updated")
 
+        print("Processes finished")
         for p in processes:
             p.join(timeout=10)
             if p.is_alive():
