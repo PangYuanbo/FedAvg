@@ -40,7 +40,7 @@ def main():
     # test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
     # attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     # attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    attack_methods = ["Pixel-backdoors", "Semantic-backdoors", "Trojan-backdoors"]
+    attack_methods = [ "Semantic-backdoors", "Trojan-backdoors"]
 
     #Global and Client Model Initialization
 
@@ -119,6 +119,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
         for event in events:
             event.wait()
+
+        print("Processes finished")
 
         for _ in range(num_processes):
             try:
