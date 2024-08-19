@@ -79,9 +79,9 @@ def train_process(number,clients_process,models,data,B,E,l,global_model,queue):
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(models[client_model].parameters(), lr=l)
         train(models[client_model], dataloader, criterion, optimizer, E)
-        # print(f"Client {client_model} trained")
-    # print ("clients_process",len(clients_process))
-    # print("models",len(models))
+        print(f"Client {client_model} trained")
+    print ("clients_process",len(clients_process))
+    print("models",len(models))
     trained_params = {client_model: models[client_model].state_dict() for  client_model in clients_process}
     queue.put(trained_params)
 
