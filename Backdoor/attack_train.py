@@ -4,7 +4,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 
-def attack_process(number, id, clients_process, models, data, B, E, l, global_model, queue, attack_method, device):
+def attack_process(number, id,event , clients_process, models, data, B, E, l, global_model, queue, attack_method, device):
     for client_idx, client_model in enumerate(clients_process):
         # 同步模型参数
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
@@ -35,11 +35,11 @@ def attack_process(number, id, clients_process, models, data, B, E, l, global_mo
                         client_model in clients_process}
     queue.put(trained_params)
     # print("Completed attack process for:", id)
-
+    event.set()
     return
 
 
-def train_process(number, id, clients_process, models, data, B, E, l, global_model, queue, device):
+def train_process(number, id,event, clients_process, models, data, B, E, l, global_model, queue, device):
     try:
         for client_idx, client_model in enumerate(clients_process):
             # 同步模型参数
@@ -60,6 +60,7 @@ def train_process(number, id, clients_process, models, data, B, E, l, global_mod
         # print("Completed training process for:", id)
     except Exception as e:
         queue.put({"error": str(e)})
+    event.set()
     return
 
 

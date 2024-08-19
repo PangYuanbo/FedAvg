@@ -16,10 +16,10 @@ def main():
     device = torch.device( "cpu")
     device_train = torch.device("cuda" if torch.cuda.is_available() else "mps")
     if torch.cuda.is_available():
-        mp.set_start_method('forkserver')
+        mp.set_start_method('spawn')
     print("Using device:", device)
     torch.set_num_threads(8)
-    num_processes =1
+    num_processes =4
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -83,6 +83,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
     for round in range(num_rounds):
         print(f"Round {round + 1}")
         queue = mp.Queue()
+        events = [mp.Event() for _ in range(num_processes)]
         # Select clients
         total_clients_number = C * len(models)
         backdoor_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
@@ -107,7 +108,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             clients_process = normal_clients[process_idx * normal_clients_process: min((process_idx + 1) * normal_clients_process,
                                                                                 normal_clients_number)]
             p = mp.Process(target=train_process, args=(
-            process_idx * normal_clients_process, process_idx, clients_process, models, data, B, E, l, global_model,
+            process_idx * normal_clients_process, process_idx, events[process_idx] ,clients_process, models, data, B, E, l, global_model,
             queue,device_train))
             p.start()
             processes.append(p)
@@ -115,6 +116,9 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         # print("Waiting for processes to finish")
         for param in global_model.parameters():
             param.data = torch.zeros_like(param.data)
+
+        for event in events:
+            event.wait()
 
         for _ in range(num_processes):
             try:
@@ -131,7 +135,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 for client, params in trained_params.items():
                     models[client].load_state_dict(params)
                     # print(f"Client {client} updated")
-
+        del trained_params
         # print("Processes finished")
         for p in processes:
             p.join(timeout=10)
@@ -145,17 +149,21 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 global_param.data += param.data / total_clients_number
 
         # Attack
+        queue = mp.Queue()
+        events = [mp.Event() for _ in range(num_processes)]
         processes = []
         for process_idx in range(num_processes):
             clients_process = backdoor_clients[process_idx * backdoor_clients_process: min((process_idx + 1) * backdoor_clients_process,
                                                                                   backdoor_clients_number)]
             p = mp.Process(target=attack_process, args=(
-            process_idx * backdoor_clients_process, process_idx, clients_process, models, backdoor_data, B, E, l, global_model,
+            process_idx * backdoor_clients_process, process_idx,events[process_idx] ,clients_process, models, backdoor_data, B, E, l, global_model,
             queue,attack_method,device_train))
             p.start()
             processes.append(p)
 
 
+        for event in events:
+            event.wait()
 
         for _ in range(num_processes):
             trained_params = queue.get()
@@ -164,7 +172,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             for client, params in trained_params.items():
                 models[client].load_state_dict(params)
                 # print(f"Client {client} updated")
-
+        del trained_params
         for p in processes:
             # print("p", p.name)
             p.join(timeout=10)
