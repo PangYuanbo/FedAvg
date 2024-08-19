@@ -19,7 +19,7 @@ def main():
         mp.set_start_method('spawn')
     print("Using device:", device)
     torch.set_num_threads(8)
-    num_processes =4
+    num_processes =1
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
