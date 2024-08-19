@@ -19,8 +19,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(12)
-    num_processes =12
+    torch.set_num_threads(36)
+    num_processes =36
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -182,7 +182,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 if 'conv' in name or 'fc' in name:
                     global_param.data += param.data / total_clients_number
 
-        loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
+        loss = test(global_model, DataLoader(train_data, shuffle=True),device_train)
         training_losses.append(loss)
         print("global model test loss:",loss)
     return training_losses

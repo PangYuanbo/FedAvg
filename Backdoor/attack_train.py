@@ -112,15 +112,15 @@ def test(model, testloader, device):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-            # for i in range(len(labels)):
-            #     if predicted[i] == labels[i]:
-            #         correct_outputs.append((predicted[i].item(), outputs[i].cpu().numpy()))
+            for i in range(len(labels)):
+                if predicted[i] == labels[i]:
+                    correct_outputs.append((predicted[i].item(), outputs[i].cpu().numpy()))
 
     model.to("cpu")  # 将模型移动回CPU
     accuracy = 100 * correct / total
     print(f'Accuracy of the network on the test images: {accuracy}%')
     # Print all correct outputs
-    # print("Correct Outputs (Prediction, Output Tensor):")
-    # for prediction, output in correct_outputs:
-    #     print(f"Prediction: {prediction}, Output Tensor: {output}")
+    print("Correct Outputs (Prediction, Output Tensor):")
+    for prediction, output in correct_outputs:
+        print(f"Prediction: {prediction}, Output Tensor: {output}")
     return correct / total
