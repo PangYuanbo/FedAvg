@@ -93,12 +93,12 @@ def train(model, trainloader, criterion, optimizer, device, epochs=10):
             optimizer.step()  # 更新权重
 
             running_loss += loss.item()
-    test(model, trainloader, device)
+    test(model, trainloader, device, print_output=False)
     # print("Total loss:", running_loss / len(trainloader))
     model.to("cpu")  # 将模型移动回CPU
 
 
-def test(model, testloader, device):
+def test(model, testloader, device, print_output=False):
     model.to(device)
     model.eval()  # 设置模型为评估模式
     correct_outputs = []  # List to store correct outputs
@@ -120,7 +120,8 @@ def test(model, testloader, device):
     accuracy = 100 * correct / total
     print(f'Accuracy of the network on the test images: {accuracy}%')
     # Print all correct outputs
-    print("Correct Outputs (Prediction, Output Tensor):")
-    for prediction, output in correct_outputs:
-        print(f"Prediction: {prediction}, Output Tensor: {output}")
+    if print_output:
+        print("Correct Outputs (Prediction, Output Tensor):")
+        for prediction, output in correct_outputs:
+            print(f"Prediction: {prediction}, Output Tensor: {output}")
     return correct / total
