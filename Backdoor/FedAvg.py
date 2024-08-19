@@ -12,6 +12,7 @@ import torch.multiprocessing as mp
 
 import torchvision.datasets as datasets
 def main():
+    torch.backends.cudnn.benchmark = False
     # Device configuration
     device = torch.device( "cpu")
     device_train = torch.device("cuda" if torch.cuda.is_available() else "mps")
