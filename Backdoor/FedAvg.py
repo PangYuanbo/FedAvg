@@ -122,20 +122,12 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         print("Processes finished")
 
         for _ in range(num_processes):
-            try:
-                trained_params = queue.get()  # 设置超时
-                if "error" in trained_params:
-                    print(f"Error from process: {trained_params['error']}")
-                    continue
-            except ConnectionResetError as e:
-                print(f"Connection reset error: {e}")
-            except Exception as e:
-                print(f"An error occurred: {e}")
-            else:
-                # print(trained_params)
-                for client, params in trained_params.items():
-                    models[client].load_state_dict(params)
-                    # print(f"Client {client} updated")
+            trained_params = queue.get()
+
+            # print(trained_params)
+            for client, params in trained_params.items():
+                models[client].load_state_dict(params)
+                # print(f"Client {client} updated")
         del trained_params
         for event in events:
             event.set()
@@ -165,8 +157,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             processes.append(p)
 
 
-        for event in events:
-            event.wait()
+
 
         for _ in range(num_processes):
             trained_params = queue.get()
@@ -175,6 +166,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             for client, params in trained_params.items():
                 models[client].load_state_dict(params)
                 # print(f"Client {client} updated")
+        for event in events:
+            event.set()
         del trained_params
         for p in processes:
             # print("p", p.name)
