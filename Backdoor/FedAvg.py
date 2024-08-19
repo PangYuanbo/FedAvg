@@ -101,6 +101,10 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             data = partition_data_noniid(train_data, normal_clients_number, 200)
             backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 50)
 
+        for name, param in global_model.named_parameters():
+            if 'conv' in name or 'fc' in name:
+                param.data = torch.zeros_like(param.data)
+
         processes = []
 
         for process_idx in range(num_processes):
@@ -130,13 +134,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             # else:
             #     print(f"Thread {p.name} finished in time")
         print("Waiting for processes to finish")
-        for param in global_model.parameters():
-            if ('conv' or 'fc') in param.name:
-                param.data = torch.zeros_like(param.data)
 
         for client_model in normal_clients:
-            for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
-                if ('conv' or 'fc') in param.name:
+            for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
+                                                        global_model.named_parameters()):
+                if 'conv' in name or 'fc' in name:
                     global_param.data += param.data / total_clients_number
 
         # Attack
@@ -169,9 +171,10 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             # print("p", p.name)
             p.join(timeout=10)
 
-        for client_model in backdoor_clients:
-            for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
-                if ('conv' or 'fc') in param.name:
+        for client_model in normal_clients:
+            for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
+                                                        global_model.named_parameters()):
+                if 'conv' in name or 'fc' in name:
                     global_param.data += param.data / total_clients_number
 
         loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
