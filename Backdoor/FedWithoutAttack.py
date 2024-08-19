@@ -53,7 +53,7 @@ def main():
     B = 50  # Batch size
     E = 5  # Number of local epochs
     l = 0.01  # Learning rate
-    ifIID = False  # If IID or non-IID
+    ifIID = True  # If IID or non-IID
     num_rounds = 50  # Number of rounds
 
     # Main Federated Learning Loop

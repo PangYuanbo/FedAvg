@@ -21,17 +21,13 @@ def main():
     torch.set_num_threads(8)
     num_processes =4
     # Transformations and Dataset Loading
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,))
-    ])
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     # test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
-    # train_data,test_data=load_dataset(False)
-    # attack_data,attack_test_data=load_dataset(False)
+    train_data,test_data=load_dataset(False)
+    attack_data,attack_test_data=load_dataset(True)
     # transform = transforms.Compose([
     #     transforms.RandomHorizontalFlip(),  # 随机水平翻转
     #     transforms.RandomCrop(32, padding=4),  # 随机裁剪
@@ -40,25 +36,49 @@ def main():
     # ])
     # print("Downloading CIFAR-10 dataset...")
     #
-    train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
-    attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    # train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    # test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    # attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    # attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    attack_methods = ["Pixel-backdoors", "Semantic-backdoors", "Trojan-backdoors"]
+
     #Global and Client Model Initialization
-    models = [ResNet18(num_classes=10,device=device).to(device) for _ in range(100)]
-    global_model = ResNet18(num_classes=10,device=device).to(device)
+
 
     # Parameters for Federated Learning
     C = 0.5  # Fraction of clients
     B = 50  # Batch size
-    E = 5  # Number of local epochs
+    E = 10  # Number of local epochs
     l = 0.01  # Learning rate
-    ifIID = False  # If IID or non-IID
+    ifIID = True  # If IID or non-IID
     num_rounds = 50  # Number of rounds
-    attack_method = "Pixel-backdoors"
+    for attack_method in attack_methods:
+        print("Attack method:", attack_method)
+        models = [CNN(num_classes=10, device=device).to(device) for _ in range(100)]
+        global_model = CNN(num_classes=10, device=device).to(device)
+        start = time.time()
+        training_losses = FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,global_model,train_data,test_data,attack_data,attack_method)
+        np.save('attack_method', np.array(training_losses))
+        print(f"Time taken: {time.time() - start} seconds")
+        # Test the global model
+        print("Testing the global model")
+        test(global_model, DataLoader(test_data, shuffle=True),device_train)
 
-    # Main Federated Learning Loop
-    start = time.time()
+        # Test the badtest model
+        print("Testing the badtest model")
+        test(global_model, DataLoader(attack_test_data, shuffle=True),device_train)
+        torch.save(global_model.state_dict(), f'global_model_{attack_method}.pth')
+
+
+
+
+
+
+
+
+
+# Main Federated Learning Loop
+def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,global_model,train_data,test_data,attack_data,attack_method):
     training_losses = []
     for round in range(num_rounds):
         print(f"Round {round + 1}")
@@ -68,6 +88,7 @@ def main():
         backdoor_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
         normal_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
         normal_clients = torch.tensor(list(normal_clients))
+        backdoor_clients = torch.tensor(list(backdoor_clients))
         normal_clients_number = len(normal_clients)
         backdoor_clients_number = len(backdoor_clients)
         normal_clients_process = normal_clients_number // num_processes  #number of clients per process
@@ -91,7 +112,7 @@ def main():
             p.start()
             processes.append(p)
 
-        print("Waiting for processes to finish")
+        # print("Waiting for processes to finish")
         for param in global_model.parameters():
             param.data = torch.zeros_like(param.data)
 
@@ -104,15 +125,15 @@ def main():
             # print(trained_params)
             for client, params in trained_params.items():
                 models[client].load_state_dict(params)
-                print(f"Client {client} updated")
+                # print(f"Client {client} updated")
 
-        print("Processes finished")
+        # print("Processes finished")
         for p in processes:
             p.join(timeout=10)
-            if p.is_alive():
-                print(f"Thread {p.name} did not finish in time")
-            else:
-                print(f"Thread {p.name} finished in time")
+            # if p.is_alive():
+            #     print(f"Thread {p.name} did not finish in time")
+            # else:
+            #     print(f"Thread {p.name} finished in time")
 
         for client_model in normal_clients:
             for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
@@ -137,10 +158,10 @@ def main():
             # print(trained_params)
             for client, params in trained_params.items():
                 models[client].load_state_dict(params)
-                print(f"Client {client} updated")
+                # print(f"Client {client} updated")
 
         for p in processes:
-            print("p", p.name)
+            # print("p", p.name)
             p.join(timeout=10)
 
         for client_model in backdoor_clients:
@@ -150,20 +171,6 @@ def main():
         loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
         training_losses.append(loss)
         print("global model test loss:",loss)
-
-    np.save('CNN_Noiid_0.5_10_1', np.array(training_losses))
-
-    print("Finished FedAvg")
-    print(f"Time taken: {time.time() - start} seconds")
-
-    # Test the global model
-    print("Testing the global model")
-    test(global_model, DataLoader(test_data, shuffle=True))
-
-
-    # Test the badtest model
-    print("Testing the badtest model")
-    test(global_model, DataLoader(attack_test_data, shuffle=True))
-
+    return training_losses
 if __name__ == "__main__":
     main()
