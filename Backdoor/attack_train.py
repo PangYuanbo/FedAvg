@@ -103,8 +103,6 @@ def train(model, trainloader, criterion, optimizer, device, epochs=10):
 
 
 def test(model, testloader, device, print_output=False):
-    torch.backends.cudnn.enabled = False
-
     # 或者启用 cuDNN Benchmark
     torch.backends.cudnn.benchmark = True
     model.to(device)
