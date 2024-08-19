@@ -94,6 +94,7 @@ class BasicBlock(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
+        # 使用 kernel_size=3, stride=1, padding=1 的配置
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False)
@@ -119,14 +120,13 @@ class BasicBlock(nn.Module):
 
         return out
 
-
 class ResNet(nn.Module):
     def __init__(self, block, layers, num_classes=10, device=None):
         super(ResNet, self).__init__()
         self.in_channels = 64
         self.device = device
 
-        # CIFAR-10 图像大小为 32x32，不需要较大的卷积核
+        # 使用 kernel_size=3, stride=1, padding=1 的配置
         self.conv1 = nn.Conv2d(3, self.in_channels, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(self.in_channels)
         self.layer1 = self._make_layer(block, 64, layers[0])
@@ -168,6 +168,31 @@ class ResNet(nn.Module):
 
         return x
 
+    def __sub__(self, other):
+        # Assuming self and other are CNN models and you want to subtract their weights
+        result = ResNet18(device=self.device)  # Create a new CNN instance to store the result
+        for param_self, param_other in zip(self.parameters(), other.parameters()):
+            param_self.data -= param_other.data
+        return result
+
+    def __mul__(self, value):
+        if isinstance(value, (int, float)):
+            result = ResNet18(device=self.device)  # Create a new CNN instance
+            for param_self, param_result in zip(self.parameters(), result.parameters()):
+                param_result.data = param_self.data * value  # Multiply each parameter by value
+            return result
+        else:
+            raise TypeError(f"Unsupported operand type(s) for *: 'CNN' and '{type(value).__name__}'")
+
+    def __add__(self, other):
+        if isinstance(other, ResNet18):
+            result = ResNet18(device=self.device)  # Create a new CNN instance
+            for param_self, param_other, param_result in zip(self.parameters(), other.parameters(),
+                                                             result.parameters()):
+                param_result.data = param_self.data + param_other.data  # Add the parameters
+            return result
+        else:
+            raise TypeError(f"Unsupported operand type(s) for +: 'CNN' and '{type(other).__name__}'")
 
 def ResNet18(num_classes=10, device='cpu'):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, device)
