@@ -18,8 +18,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(12)
-    num_processes =12
+    torch.set_num_threads(4)
+    num_processes =4
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -112,15 +112,6 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             p.start()
             processes.append(p)
 
-        # print("Waiting for processes to finish")
-        for param in global_model.parameters():
-            if ('conv' or 'fc') in param.name:
-                param.data = torch.zeros_like(param.data)
-
-
-
-        print("Processes finished")
-
         for _ in range(num_processes):
             trained_params = queue.get()
 
@@ -138,6 +129,10 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             #     print(f"Thread {p.name} did not finish in time")
             # else:
             #     print(f"Thread {p.name} finished in time")
+        print("Waiting for processes to finish")
+        for param in global_model.parameters():
+            if ('conv' or 'fc') in param.name:
+                param.data = torch.zeros_like(param.data)
 
         for client_model in normal_clients:
             for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
