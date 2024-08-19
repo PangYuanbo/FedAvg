@@ -12,7 +12,7 @@ import torch.multiprocessing as mp
 
 import torchvision.datasets as datasets
 def main():
-    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.benchmark = True
     # Device configuration
     device = torch.device( "cpu")
     device_train = torch.device("cuda" if torch.cuda.is_available() else "mps")
@@ -182,7 +182,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 if 'conv' in name or 'fc' in name:
                     global_param.data += param.data / total_clients_number
 
-        loss = test(global_model, DataLoader(train_data, shuffle=True),device_train,print_output=False)
+        loss = test(normal_clients[1], DataLoader(train_data, shuffle=True),device_train,print_output=False)
         training_losses.append(loss)
         print("global model test loss:",loss)
     return training_losses
