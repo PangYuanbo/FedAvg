@@ -35,7 +35,7 @@ def attack_process(number, id,event , clients_process, models, data, B, E, l, gl
                         client_model in clients_process}
     queue.put(trained_params)
     # print("Completed attack process for:", id)
-    event.set()
+    event.wait()
     return
 
 

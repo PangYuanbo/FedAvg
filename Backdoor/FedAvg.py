@@ -117,8 +117,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for param in global_model.parameters():
             param.data = torch.zeros_like(param.data)
 
-        for event in events:
-            event.wait()
+
 
         print("Processes finished")
 
@@ -138,6 +137,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                     models[client].load_state_dict(params)
                     # print(f"Client {client} updated")
         del trained_params
+        for event in events:
+            event.set()
         # print("Processes finished")
         for p in processes:
             p.join(timeout=10)
