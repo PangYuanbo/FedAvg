@@ -40,23 +40,26 @@ def attack_process(number, id, clients_process, models, data, B, E, l, global_mo
 
 
 def train_process(number, id, clients_process, models, data, B, E, l, global_model, queue, device):
-    for client_idx, client_model in enumerate(clients_process):
-        # 同步模型参数
-        for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
-            param.data = center_param.data.clone()
+    try:
+        for client_idx, client_model in enumerate(clients_process):
+            # 同步模型参数
+            for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
+                param.data = center_param.data.clone()
 
-        dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(models[client_model].parameters(), lr=l, momentum=0.9, weight_decay=5e-4)
+            dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
+            criterion = nn.CrossEntropyLoss()
+            optimizer = optim.SGD(models[client_model].parameters(), lr=l, momentum=0.9, weight_decay=5e-4)
 
-        # 模型训练
-        train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
+            # 模型训练
+            train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
 
-     # 将训练好的参数转移到CPU后再传递
-    trained_params = {client_model: {k: v.cpu() for k, v in models[client_model].state_dict().items()} for
-                        client_model in clients_process}
-    queue.put(trained_params)
-    # print("Completed training process for:", id)
+         # 将训练好的参数转移到CPU后再传递
+        trained_params = {client_model: {k: v.cpu() for k, v in models[client_model].state_dict().items()} for
+                            client_model in clients_process}
+        queue.put(trained_params)
+        # print("Completed training process for:", id)
+    except Exception as e:
+        queue.put({"error": str(e)})
     return
 
 

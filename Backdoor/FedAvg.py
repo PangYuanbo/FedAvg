@@ -119,15 +119,18 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for _ in range(num_processes):
             try:
                 trained_params = queue.get()  # 设置超时
+                if "error" in trained_params:
+                    print(f"Error from process: {trained_params['error']}")
+                    continue
             except ConnectionResetError as e:
                 print(f"Connection reset error: {e}")
             except Exception as e:
                 print(f"An error occurred: {e}")
-
-            # print(trained_params)
-            for client, params in trained_params.items():
-                models[client].load_state_dict(params)
-                # print(f"Client {client} updated")
+            else:
+                # print(trained_params)
+                for client, params in trained_params.items():
+                    models[client].load_state_dict(params)
+                    # print(f"Client {client} updated")
 
         # print("Processes finished")
         for p in processes:
@@ -175,4 +178,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         print("global model test loss:",loss)
     return training_losses
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"Unhandled exception: {e}")
+
