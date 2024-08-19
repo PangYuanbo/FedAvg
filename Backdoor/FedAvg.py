@@ -18,8 +18,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(8)
-    num_processes =4
+    torch.set_num_threads(16)
+    num_processes =16
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -40,7 +40,7 @@ def main():
     # test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
     # attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     # attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    attack_methods = [ "Semantic-backdoors", "Trojan-backdoors"]
+    attack_methods = [ "Pixel-backdoors","Semantic-backdoors", "Trojan-backdoors"]
 
     #Global and Client Model Initialization
 
@@ -54,8 +54,8 @@ def main():
     num_rounds = 50  # Number of rounds
     for attack_method in attack_methods:
         print("Attack method:", attack_method)
-        models = [CNN(num_classes=10, device=device).to(device) for _ in range(100)]
-        global_model = CNN(num_classes=10, device=device).to(device)
+        models = [ResNet18(num_classes=10, device=device).to(device) for _ in range(100)]
+        global_model = ResNet18(num_classes=10, device=device).to(device)
         start = time.time()
         training_losses = FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,global_model,train_data,test_data,attack_data,attack_method)
         np.save('attack_method', np.array(training_losses))
