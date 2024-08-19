@@ -84,6 +84,7 @@ def train_process(number,clients_process,models,data,B,E,l,global_model,queue):
     print("models",len(models))
     trained_params = {client_model: models[client_model].state_dict() for  client_model in clients_process}
     queue.put(trained_params)
+    return
 
 def train(model, trainloader, criterion, optimizer, epochs=10):
     model.train()
