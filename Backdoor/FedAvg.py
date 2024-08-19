@@ -118,9 +118,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
         for _ in range(num_processes):
             try:
-                trained_params = queue.get()  # Add a timeout to prevent indefinite blocking
-            except EOFError:
-                print("EOFError: One of the processes terminated unexpectedly.")
+                trained_params = queue.get()  # 设置超时
+            except ConnectionResetError as e:
+                print(f"Connection reset error: {e}")
+            except Exception as e:
+                print(f"An error occurred: {e}")
 
             # print(trained_params)
             for client, params in trained_params.items():
