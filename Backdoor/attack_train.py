@@ -65,6 +65,10 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
 
 
 def train(model, trainloader, criterion, optimizer, device, epochs=10):
+    torch.backends.cudnn.enabled = False
+
+    # 或者启用 cuDNN Benchmark
+    torch.backends.cudnn.benchmark = True
     # print("Training on device:", device)
     model.to(device)  # 将模型移动到设备上
     model.train()  # 设置模型为训练模式
@@ -99,6 +103,10 @@ def train(model, trainloader, criterion, optimizer, device, epochs=10):
 
 
 def test(model, testloader, device, print_output=False):
+    torch.backends.cudnn.enabled = False
+
+    # 或者启用 cuDNN Benchmark
+    torch.backends.cudnn.benchmark = True
     model.to(device)
     model.eval()  # 设置模型为评估模式
     correct_outputs = []  # List to store correct outputs
