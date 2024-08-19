@@ -18,8 +18,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(12)
-    num_processes =12
+    torch.set_num_threads(4)
+    num_processes =4
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -74,7 +74,12 @@ def main():
 
 
 
-
+def merge_conv_layers(global_model, models, total_clients_number):
+    for client_model in models:
+        for (global_name, global_param), (client_name, client_param) in zip(global_model.named_parameters(), models[client_model].named_parameters()):
+            # 只合并卷积层的参数
+            if 'conv' or 'fc' in global_name:
+                global_param.data += client_param.data / total_clients_number
 
 
 # Main Federated Learning Loop
@@ -115,7 +120,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
         # print("Waiting for processes to finish")
         for param in global_model.parameters():
-            param.data = torch.zeros_like(param.data)
+            if ('conv' or 'fc') in param.name:
+                param.data = torch.zeros_like(param.data)
 
 
 
@@ -139,9 +145,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             # else:
             #     print(f"Thread {p.name} finished in time")
 
-        for client_model in normal_clients:
-            for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
-                global_param.data += param.data / total_clients_number
+        merge_conv_layers(global_model, models, total_clients_number)
 
         # Attack
         queue = mp.Queue()
@@ -173,9 +177,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             # print("p", p.name)
             p.join(timeout=10)
 
-        for client_model in backdoor_clients:
-            for param, global_param in zip(models[client_model].parameters(), global_model.parameters()):
-                global_param.data += param.data / total_clients_number
+        merge_conv_layers(global_model, models, total_clients_number)
 
         loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
         training_losses.append(loss)
