@@ -65,7 +65,7 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
 
 
 def train(model, trainloader, criterion, optimizer, device, epochs=10):
-    # print("Training on device:", device)
+    print("Training on device:", device)
     model.to(device)  # 将模型移动到设备上
     model.train()  # 设置模型为训练模式
 
