@@ -56,7 +56,7 @@ def main():
     C = 0.5  # Fraction of clients
     B = 50  # Batch size
     E = 10  # Number of local epochs
-    l = 0.01  # Learning rate
+    l = 0.001  # Learning rate
     ifIID = True  # If IID or non-IID
     num_rounds = 50  # Number of rounds
     for attack_method in attack_methods:
