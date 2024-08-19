@@ -60,7 +60,7 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
         # print("Completed training process for:", id)
     except Exception as e:
         queue.put({"error": str(e)})
-    event.set()
+    event.wait()
     return
 
 
