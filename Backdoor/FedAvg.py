@@ -104,7 +104,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             backdoor_data = partition_data_iid(attack_data, backdoor_clients_number)
         else:
             data = partition_data_noniid(train_data, normal_clients_number, 200)
-            backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 50)
+            backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 200)
 
 
         update_models = []
