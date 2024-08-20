@@ -173,7 +173,6 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for _ in range(num_processes):
             # 从队列中获取完整的模型对象字典
             trained_models = queue.get()
-
             # 替换本地模型
             for client, model in trained_models.items():
                 for name, param in model.named_parameters():
@@ -204,6 +203,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
         print("updating global model")
         global_model=model1
+        print(type(global_model))
         # 使用 weight_accumulator 更新 global_model
         for name, param in global_model.named_parameters():
             if name in weight_accumulator:
