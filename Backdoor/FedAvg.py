@@ -89,13 +89,14 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         queue = mp.Queue()
         events = [mp.Event() for _ in range(num_processes)]
         # Select clients
-        total_clients_number = C * len(models)
+
         backdoor_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
         normal_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
         normal_clients = torch.tensor(list(normal_clients))
         backdoor_clients = torch.tensor(list(backdoor_clients))
         normal_clients_number = len(normal_clients)
         backdoor_clients_number = len(backdoor_clients)
+        total_clients_number = normal_clients_number + backdoor_clients_number
         normal_clients_process = normal_clients_number // num_processes  #number of clients per process
         backdoor_clients_process = backdoor_clients_number // num_processes
         # Prepare data
@@ -169,18 +170,37 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             # print("p", p.name)
             p.join(timeout=10)
 
-        for name, param in global_model.named_parameters():
-            param.data = torch.zeros_like(param.data)
 
+        # for client_model in normal_clients:
+        #     for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
+        #                                                 global_model.named_parameters()):
+        #         global_param.data += param.data / total_clients_number
+        #
+        # for client_model in backdoor_clients:
+        #     for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
+        #                                                 global_model.named_parameters()):
+        #         global_param.data += param.data / total_clients_number
+        # 初始化 weight_accumulator
+        weight_accumulator = {name: torch.zeros_like(param) for name, param in global_model.named_parameters()}
+
+        # 累积 normal_clients 的模型差异
         for client_model in normal_clients:
-            for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
-                                                        global_model.named_parameters()):
-                global_param.data += param.data / total_clients_number
+            for name, param in models[client_model].named_parameters():
+                # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
+                #     continue
+                weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
 
+        # 累积 backdoor_clients 的模型差异
         for client_model in backdoor_clients:
-            for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
-                                                        global_model.named_parameters()):
-                global_param.data += param.data / total_clients_number
+            for name, param in models[client_model].named_parameters():
+                # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
+                #     continue
+                weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
+
+        # 使用 weight_accumulator 更新 global_model
+        for name, param in global_model.named_parameters():
+            if name in weight_accumulator:
+                param.data += weight_accumulator[name]
 
         # Test the global model
         loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
