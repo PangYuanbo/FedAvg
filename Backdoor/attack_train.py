@@ -97,6 +97,7 @@ def train(model, trainloader, criterion, optimizer, device, epochs=10):
 
     # print("Total loss:", running_loss / len(trainloader))
     model.to("cpu")  # 将模型移动回CPU
+    print(id(model))
     return model
 
 
