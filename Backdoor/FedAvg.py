@@ -177,17 +177,15 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for client_model in normal_clients:
             for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
                                                         global_model.named_parameters()):
-                if 'conv' in name or 'fc' in name:
-                    global_param.data += param.data / total_clients_number
+                global_param.data += param.data / total_clients_number
 
         for client_model in backdoor_clients:
             for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
                                                         global_model.named_parameters()):
-                if 'conv' in name or 'fc' in name:
-                    global_param.data += param.data / total_clients_number
+                global_param.data += param.data / total_clients_number
 
-        loss=0
-
+        # Test the global model
+        loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
         training_losses.append(loss)
         print("global model test loss:",loss)
     return training_losses
