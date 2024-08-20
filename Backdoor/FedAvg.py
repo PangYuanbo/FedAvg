@@ -49,7 +49,7 @@ def main():
 
 
     # Parameters for Federated Learning
-    C = 0.5  # Fraction of clients
+    C = 0.1  # Fraction of clients
     B = 50  # Batch size
     E = 1  # Number of local epochs
     l = 0.001  # Learning rate
