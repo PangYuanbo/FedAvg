@@ -27,7 +27,7 @@ def main():
     # attack_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
     train_data,test_data=load_dataset(False)
-    attack_data,attack_test_data=load_dataset(False)
+    attack_data,attack_test_data=load_dataset(True)
 
     attack_methods = ["Trojan-backdoors"]
 
