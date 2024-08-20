@@ -51,8 +51,8 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
             optimizer = optim.SGD(models[client_model].parameters(), lr=l, momentum=0.9, weight_decay=5e-4)
 
             # 模型训练
-            train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
-            trained_models[client_model]=test(models[client_model], dataloader, device)
+            trained_models[client_model]=train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
+
             print("Trained models:", id(trained_models[client_model]))
 
          # 将训练好的参数转移到CPU后再传递
