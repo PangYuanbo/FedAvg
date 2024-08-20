@@ -89,7 +89,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         queue = mp.Queue()
         events = [mp.Event() for _ in range(num_processes)]
         # Select clients
-
+        test(global_model, DataLoader(test_data, shuffle=True), device_train)
         backdoor_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
         normal_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
         normal_clients = torch.tensor(list(normal_clients))
@@ -108,7 +108,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 50)
 
 
-
+        update_models = []
         processes = []
 
         for process_idx in range(num_processes):
@@ -120,7 +120,6 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             p.start()
             processes.append(p)
 
-        update_models=[]
         for _ in range(num_processes):
             # 从队列中获取完整的模型对象字典
             trained_models = queue.get()
@@ -197,6 +196,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for name, param in global_model.named_parameters():
             if name in weight_accumulator:
                 param.data += weight_accumulator[name]
+                print("weight_accumulator",weight_accumulator[name])
 
         # Test the global model
         loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
