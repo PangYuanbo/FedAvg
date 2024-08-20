@@ -124,3 +124,42 @@ def test(model, testloader, device, print_output=False):
         for prediction, output in correct_outputs:
             print(f"Prediction: {prediction}, Output Tensor: {output}")
     return correct / total
+
+def test_global(model, testloader, device, print_output=False):
+    model.to(device)
+    model.eval()  # 设置模型为评估模式
+    correct_outputs = []  # List to store correct outputs
+    incorrect_outputs = []  # List to store incorrect outputs
+    correct = 0
+    total = 0
+    with torch.no_grad():  # 评估模式下不需要计算梯度
+        for data in testloader:
+            images, labels = data[0].to(device), data[1].to(device)  # 将数据移动到设备上
+            outputs = model(images)  # 前向传播
+            _, predicted = torch.max(outputs.data, 1)  # 获取预测结果
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+            for i in range(len(labels)):
+                if predicted[i] == labels[i]:
+                    correct_outputs.append((predicted[i].item(), outputs[i].cpu().numpy()))
+                else:
+                    # 如果预测错误，记录正确标签和错误标签
+                    incorrect_outputs.append((predicted[i].item(), labels[i].item(), outputs[i].cpu().numpy()))
+
+    model.to("cpu")  # 将模型移动回CPU
+    accuracy = 100 * correct / total
+    print(f'Accuracy of the network on the test images: {accuracy}%')
+
+    # 打印所有正确的输出
+    if print_output:
+        print("Correct Outputs (Prediction, Output Tensor):")
+        for prediction, output in correct_outputs:
+            print(f"Prediction: {prediction}, Output Tensor: {output}")
+
+        # 打印所有错误的输出
+        print("Incorrect Outputs (Predicted Label, Correct Label, Output Tensor):")
+        for pred, correct_label, output in incorrect_outputs:
+            print(f"Predicted Label: {pred}, Correct Label: {correct_label}, Output Tensor: {output}")
+
+    return correct / total

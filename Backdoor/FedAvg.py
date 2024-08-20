@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 import time
 from models import CNN,ResNet18
 from data_utils import partition_data_iid, partition_data_noniid
-from attack_train import test, train_process,attack_process
+from attack_train import test, train_process,attack_process,test_global
 from torch.utils.data import DataLoader
 from semantic_attack import load_dataset
 import torch.multiprocessing as mp
@@ -199,7 +199,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 # print("weight_accumulator",weight_accumulator[name])
 
         # Test the global model
-        loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
+        loss = test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
         training_losses.append(loss)
         print("global model test loss:",loss)
     return training_losses
