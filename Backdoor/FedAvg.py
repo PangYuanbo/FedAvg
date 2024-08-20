@@ -133,7 +133,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                     #     continue
                     weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
 
-
+        del trained_models
         for event in events:
             event.set()
         # print("Processes finished")
