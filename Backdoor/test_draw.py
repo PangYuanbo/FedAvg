@@ -7,7 +7,7 @@ from semantic_attack import load_dataset
 
 # 加载正常数据集和带有后门的攻击数据集
 train_data, test_data = load_dataset(Ifattack=False)  # 正常数据集
-attack_data, attack_test_data = load_dataset(Ifattack=True)  # 带有后门的数据集
+attack_data, attack_test_data = load_dataset(Ifattack=False)  # 带有后门的数据集
 
 # 定义 CIFAR 数据集索引
 GREEN_CAR1 = [389, 1304, 1731, 6673, 13468, 15702, 19165, 19500, 20351, 20764, 21422, 22984, 28027, 29188, 30209, 32941,
@@ -27,7 +27,7 @@ green_tst_loader = DataLoader(green_tst_subset, batch_size=16, shuffle=False)
 model = CNN('cpu')  # 假设你使用的是 CNN 或 ResNet18
 
 # 加载预训练模型权重
-model.load_state_dict(torch.load('global_model_Semantic-backdoors.pth'))
+model.load_state_dict(torch.load('global_model_Trojan-backdoors.pth', map_location='cpu'))
 model.eval()  # 切换模型到评估模式
 
 # 评估模型准确性

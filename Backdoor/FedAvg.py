@@ -185,7 +185,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                                                         global_model.named_parameters()):
                 if 'conv' in name or 'fc' in name:
                     global_param.data += param.data / total_clients_number
-        loss = test(global_model, DataLoader(train_data, shuffle=True),device_train,print_output=False)
+
+        loss=0
+        for client_model in backdoor_clients:
+            loss = test(client_model, DataLoader(train_data, shuffle=True),device_train,print_output=False)
+            return
         training_losses.append(loss)
         print("global model test loss:",loss)
     return training_losses

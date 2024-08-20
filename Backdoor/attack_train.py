@@ -12,7 +12,7 @@ def attack_process(number, id,event , clients_process, models, data, B, E, l, gl
 
         dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(models[client_model].parameters(), lr=l)
+        optimizer = optim.SGD(models[client_model].parameters(), lr=l, momentum=0.9, weight_decay=5e-4)
 
         # 模型训练
         train(models[client_model], dataloader, criterion, optimizer, device, E)
