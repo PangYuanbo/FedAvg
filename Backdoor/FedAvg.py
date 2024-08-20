@@ -9,6 +9,8 @@ from attack_train import test, train_process,attack_process,test_global
 from torch.utils.data import DataLoader
 from semantic_attack import load_dataset
 import torch.multiprocessing as mp
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 import torchvision.datasets as datasets
 def main():
@@ -21,8 +23,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(1)
-    num_processes =1
+    torch.set_num_threads(16)
+    num_processes =16
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -52,7 +54,7 @@ def main():
     C = 0.1  # Fraction of clients
     B = 50  # Batch size
     E = 1  # Number of local epochs
-    l = 0.001  # Learning rate
+    l = 0.005  # Learning rate
     ifIID = True  # If IID or non-IID
     num_rounds = 50  # Number of rounds
     for attack_method in attack_methods:
@@ -72,7 +74,7 @@ def main():
         # Test the badtest model
         print("Testing the badtest model")
         test(global_model, DataLoader(attack_test_data, shuffle=True),device_train)
-        torch.save(global_model.state_dict(), f'global_model_{attack_method}.pth')
+        torch.save(global_model.state_dict(), f'Rest18_global_model_{attack_method}.pth')
 
 
 
