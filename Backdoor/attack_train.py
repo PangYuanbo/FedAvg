@@ -40,6 +40,7 @@ def attack_process(number, id,event , clients_process, models, data, B, E, l, gl
 
 def train_process(number, id,event, clients_process, models, data, B, E, l, global_model, queue, device):
     try:
+        trained_models = {}
         for client_idx, client_model in enumerate(clients_process):
             # 同步模型参数
             for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
@@ -52,9 +53,10 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
             # 模型训练
             train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
             test(models[client_model], dataloader, device)
+            trained_models[client_model] = models[client_model]
 
          # 将训练好的参数转移到CPU后再传递
-        trained_models = {client_model: models[client_model] for client_model in clients_process}
+
         queue.put(trained_models)
         # print("Completed training process for:", id)
     except Exception as e:
