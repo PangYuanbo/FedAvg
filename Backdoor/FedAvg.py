@@ -127,13 +127,14 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             # 替换本地模型
             for client, model in trained_models.items():
                 for name, param in model.named_parameters():
-                     print(f"Parameter name: {name}")
-                     print(param.data)  # 打印参数的具体值
-                     print("------")
+                    if 'fc' in name:
+                        print(f"Parameter name: {name}")
+                        print(param.data)  # 打印参数的具体值
+                        print("------")
                 print(1)
                 # print(id(model))
                 print(2)
-                test_global(model, DataLoader(train_data, shuffle=True), device_train)
+                test_global(model, DataLoader(test_data, shuffle=True), device_train)
                 for name, param in model.named_parameters():
                     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
                     #     continue
