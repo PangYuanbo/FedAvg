@@ -18,8 +18,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(6)
-    num_processes =6
+    torch.set_num_threads(12)
+    num_processes =12
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -89,8 +89,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             data = partition_data_iid(train_data, normal_clients_number)
             backdoor_data = partition_data_iid(attack_data, backdoor_clients_number)
         else:
-            data = partition_data_noniid(train_data, normal_clients_number, 200)
-            backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 200)
+            data = partition_data_noniid(train_data, normal_clients_number, 100)
+            backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 100)
 
 
         update_models = []
