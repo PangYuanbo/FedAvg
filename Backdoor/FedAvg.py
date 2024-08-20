@@ -171,8 +171,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             p.join(timeout=10)
 
         for name, param in global_model.named_parameters():
-            if 'conv' in name or 'fc' in name:
-                param.data = torch.zeros_like(param.data)
+            param.data = torch.zeros_like(param.data)
 
         for client_model in normal_clients:
             for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
