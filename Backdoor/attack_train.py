@@ -125,7 +125,7 @@ def test(model, testloader, device, print_output=False):
             print(f"Prediction: {prediction}, Output Tensor: {output}")
     return correct / total
 
-def test_global(model, testloader, device, print_output=True):
+def test_global(model, testloader, device, print_output=False):
     model.to(device)
     model.eval()  # 设置模型为评估模式
     correct_outputs = []  # List to store correct outputs
