@@ -29,20 +29,20 @@ def main():
     # test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
-    train_data,test_data=load_dataset(False)
-    attack_data,attack_test_data=load_dataset(True)
-    # transform = transforms.Compose([
-    #     transforms.RandomHorizontalFlip(),  # 随机水平翻转
-    #     transforms.RandomCrop(32, padding=4),  # 随机裁剪
-    #     transforms.ToTensor(),  # 转换为Tensor
-    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))  # 正则化
-    # ])
-    # print("Downloading CIFAR-10 dataset...")
-    #
-    # train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    # test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
-    # attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    # attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    # train_data,test_data=load_dataset(False)
+    # attack_data,attack_test_data=load_dataset(True)
+    transform = transforms.Compose([
+        transforms.RandomHorizontalFlip(),  # 随机水平翻转
+        transforms.RandomCrop(32, padding=4),  # 随机裁剪
+        transforms.ToTensor(),  # 转换为Tensor
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))  # 正则化
+    ])
+    print("Downloading CIFAR-10 dataset...")
+
+    train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     attack_methods = [ "Pixel-backdoors","Semantic-backdoors", "Trojan-backdoors"]
 
     #Global and Client Model Initialization
