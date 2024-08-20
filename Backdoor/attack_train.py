@@ -55,7 +55,8 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
             if not isinstance(trained_model, torch.nn.Module):
                 raise TypeError(
                     f"Expected trained_model to be a torch.nn.Module, but got {type(trained_model)} instead.")
-            test(trained_model, dataloader, device)  # 测试模型准确性
+            test(trained_models[client_model], dataloader, device)  # 测试模型准确性
+
             # print("Trained models:", id(trained_models[client_model]))
             # print("Trained models:", id(trained_models[client_model]))
          # 将训练好的参数转移到CPU后再传递
