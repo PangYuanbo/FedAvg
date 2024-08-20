@@ -129,7 +129,6 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 print(1)
                 print(id(model))
                 print(2)
-                model1=model
                 test_global(model, DataLoader(test_data, shuffle=True), device_train)
                 for name, param in model.named_parameters():
                     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
@@ -137,12 +136,12 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                     weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
 
         del trained_models
-        for name, param in global_model.named_parameters():
-            if name in weight_accumulator:
-                    param.data += weight_accumulator[name]
-        print("Test the global model")
-        test_global(model1, DataLoader(test_data, shuffle=True), device_train)
-        test_global(global_model, DataLoader(test_data, shuffle=True), device_train)
+        # for name, param in global_model.named_parameters():
+        #     if name in weight_accumulator:
+        #             param.data += weight_accumulator[name]
+        # print("Test the global model")
+        # test_global(model1, DataLoader(test_data, shuffle=True), device_train)
+        # test_global(global_model, DataLoader(test_data, shuffle=True), device_train)
         for event in events:
             event.set()
         # print("Processes finished")
