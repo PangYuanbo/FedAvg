@@ -121,13 +121,14 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             queue,device_train))
             p.start()
             processes.append(p)
-
+        model1=None
         for _ in range(num_processes):
             # 从队列中获取完整的模型对象字典
             trained_models = queue.get()
 
             # 替换本地模型
             for client, model in trained_models.items():
+                model1=model
                 for name, param in model.named_parameters():
                     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
                     #     continue
@@ -138,6 +139,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             if name in weight_accumulator:
                     param.data += weight_accumulator[name]
         print("Test the global model")
+        test_global(model1, DataLoader(test_data, shuffle=True), device_train)
         test_global(global_model, DataLoader(test_data, shuffle=True), device_train)
         for event in events:
             event.set()
