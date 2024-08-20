@@ -110,6 +110,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
         update_models = []
         processes = []
+        # 初始化 weight_accumulator
+        weight_accumulator = {name: torch.zeros_like(param) for name, param in global_model.named_parameters()}
 
         for process_idx in range(num_processes):
             clients_process = normal_clients[process_idx * normal_clients_process: min((process_idx + 1) * normal_clients_process,
@@ -126,8 +128,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
             # 替换本地模型
             for client, model in trained_models.items():
-                update_models.append(model)
-                print(f"Client {client} model updated")
+                for name, param in model.named_parameters():
+                    # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
+                    #     continue
+                    weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
+
 
         for event in events:
             event.set()
@@ -161,7 +166,10 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
             # 替换本地模型
             for client, model in trained_models.items():
-                update_models.append(model)
+                for name, param in model.named_parameters():
+                    # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
+                    #     continue
+                    weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
                 # print(f"Client {client} model updated")
         for event in events:
             event.set()
@@ -181,8 +189,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         #     for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
         #                                                 global_model.named_parameters()):
         #         global_param.data += param.data / total_clients_number
-        # 初始化 weight_accumulator
-        weight_accumulator = {name: torch.zeros_like(param) for name, param in global_model.named_parameters()}
+
 
         # 累积 normal_clients 的模型差异
         for client_model in update_models:
@@ -199,14 +206,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 param.data += weight_accumulator[name]
                 # print("weight_accumulator",weight_accumulator[name])
 
-        for (name, param), (_, global_param) in zip(update_models[1].named_parameters(),
-                                                            global_model.named_parameters()):
-            global_param.data = param.data
         print("Test the global model")
-        loss = test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
+        test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
         print("the first model")
-        loss = test_global(update_models[1], DataLoader(test_data, shuffle=True), device_train)
-        training_losses.append(loss)
+        test_global(update_models[1], DataLoader(test_data, shuffle=True), device_train)
+
 
     return training_losses
 if __name__ == "__main__":
