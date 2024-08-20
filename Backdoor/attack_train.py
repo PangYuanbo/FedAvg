@@ -47,11 +47,10 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
                 param.data = center_param.data.clone()
 
             dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
-            criterion = nn.CrossEntropyLoss()
-            optimizer = optim.SGD(models[client_model].parameters(), lr=l, momentum=0.9, weight_decay=5e-4)
+
 
             # 模型训练
-            trained_models[client_model]=train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
+            trained_models[client_model]=train(models[client_model], dataloader, l, device, epochs=E)
             print("Trained models:", id(trained_models[client_model]))
 
          # 将训练好的参数转移到CPU后再传递
@@ -64,11 +63,12 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
     return
 
 
-def train(model, trainloader, criterion, optimizer, device, epochs=10):
+def train(model, trainloader,l, device, epochs=10):
     # print("Training on device:", device)
     model.to(device)  # 将模型移动到设备上
     model.train()  # 设置模型为训练模式
-
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=l, momentum=0.9, weight_decay=5e-4)
     for epoch in range(epochs):
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
