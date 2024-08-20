@@ -49,7 +49,7 @@ def main():
 
 
     # Parameters for Federated Learning
-    C = 0.02  # Fraction of clients
+    C = 0.1  # Fraction of clients
     B = 50  # Batch size
     E = 1  # Number of local epochs
     l = 0.001  # Learning rate
@@ -126,29 +126,23 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             trained_models = queue.get()
             # 替换本地模型
             for client, model in trained_models.items():
-                for name, param in model.named_parameters():
-                    if 'fc' in name:
-                        print(f"Parameter name: {name}")
-                        print(param.data)  # 打印参数的具体值
-                        print("------")
-                print(1)
-                print(type(model))
-                print(2)
-                test(model, DataLoader(test_data, shuffle=True), device_train)
+                model1=model
+                # for name, param in model.named_parameters():
+                #     if 'fc' in name:
+                #         print(f"Parameter name: {name}")
+                #         print(param.data)  # 打印参数的具体值
+                #         print("------")
+                # print(1)
+                # print(type(model))
+                # print(2)
+                # test(model, DataLoader(test_data, shuffle=True), device_train)
                 for name, param in model.named_parameters():
                     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
                     #     continue
-                    weight_accumulator[name] += (param.data - global_model.state_dict()[name])
-                for name, param in global_model.named_parameters():
-                    if name in weight_accumulator:
-                        param.data += weight_accumulator[name]
-                for name, param in global_model.named_parameters():
-                    if 'fc' in name:
-                        print(f"Parameter name: {name}")
-                        print(param.data)  # 打印参数的具体值
-                        print("------")
-                print("Test the global model")
-                test(global_model, DataLoader(test_data, shuffle=True), device_train)
+                    weight_accumulator[name] += (param.data - global_model.state_dict()[name])/total_clients_number
+
+
+
 
         del trained_models
 
@@ -165,35 +159,35 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
 
 
-        # # Attack
-        # queue = mp.Queue()
-        # events = [mp.Event() for _ in range(num_processes)]
-        # processes = []
-        # for process_idx in range(num_processes):
-        #     clients_process = backdoor_clients[process_idx * backdoor_clients_process: min((process_idx + 1) * backdoor_clients_process,
-        #                                                                           backdoor_clients_number)]
-        #     p = mp.Process(target=attack_process, args=(
-        #     process_idx * backdoor_clients_process, process_idx,events[process_idx] ,clients_process, models, backdoor_data, B, E, l, global_model,
-        #     queue,attack_method,device_train))
-        #     p.start()
-        #     processes.append(p)
-        #
-        # for _ in range(num_processes):
-        #     # 从队列中获取完整的模型对象字典
-        #     trained_models = queue.get()
-        #
-        #     # 替换本地模型
-        #     for client, model in trained_models.items():
-        #         for name, param in model.named_parameters():
-        #             # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
-        #             #     continue
-        #             weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
-        # for event in events:
-        #     event.set()
-        #
-        # for p in processes:
-        #     # print("p", p.name)
-        #     p.join(timeout=10)
+        #Attack
+        queue = mp.Queue()
+        events = [mp.Event() for _ in range(num_processes)]
+        processes = []
+        for process_idx in range(num_processes):
+            clients_process = backdoor_clients[process_idx * backdoor_clients_process: min((process_idx + 1) * backdoor_clients_process,
+                                                                                  backdoor_clients_number)]
+            p = mp.Process(target=attack_process, args=(
+            process_idx * backdoor_clients_process, process_idx,events[process_idx] ,clients_process, models, backdoor_data, B, E, l, global_model,
+            queue,attack_method,device_train))
+            p.start()
+            processes.append(p)
+
+        for _ in range(num_processes):
+            # 从队列中获取完整的模型对象字典
+            trained_models = queue.get()
+
+            # 替换本地模型
+            for client, model in trained_models.items():
+                for name, param in model.named_parameters():
+                    # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
+                    #     continue
+                    weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
+        for event in events:
+            event.set()
+
+        for p in processes:
+            # print("p", p.name)
+            p.join(timeout=10)
 
 
 
@@ -216,15 +210,15 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         #         weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
 
 
-
+        global_model=model1
         # 使用 weight_accumulator 更新 global_model
-        # for name, param in global_model.named_parameters():
-        #     if name in weight_accumulator:
-        #         param.data += weight_accumulator[name]
-                # print("weight_accumulator",weight_accumulator[name])
+        for name, param in global_model.named_parameters():
+            if name in weight_accumulator:
+                param.data += weight_accumulator[name]
+                print("weight_accumulator",weight_accumulator[name])
 
-        # print("Test the global model")
-        # test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
+        print("Test the global model")
+        test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
 
 
 

@@ -55,12 +55,12 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
             if not isinstance(trained_model, torch.nn.Module):
                 raise TypeError(
                     f"Expected trained_model to be a torch.nn.Module, but got {type(trained_model)} instead.")
-            for name, param in trained_model.named_parameters():
-                if 'fc' in name:
-                    print(f"Parameter name: {name}")
-                    print(param.data)  # 打印参数的具体值
-                    print("------")
-            test(trained_model, dataloader, device)  # 测试模型准确性
+            # for name, param in trained_model.named_parameters():
+            #     if 'fc' in name:
+            #         print(f"Parameter name: {name}")
+            #         print(param.data)  # 打印参数的具体值
+            #         print("------")
+            # test(trained_model, dataloader, device)  # 测试模型准确性
 
             # print("Trained models:", id(trained_models[client_model]))
             # print("Trained models:", id(trained_models[client_model]))
