@@ -52,6 +52,9 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
             # 模型训练
             trained_model = train(models[client_model], dataloader, l, device, epochs=E)
             trained_models[client_model] = trained_model  # 保存训练后的模型
+            if not isinstance(trained_model, torch.nn.Module):
+                raise TypeError(
+                    f"Expected trained_model to be a torch.nn.Module, but got {type(trained_model)} instead.")
             print("Trained models:", id(trained_models[client_model]))
 
          # 将训练好的参数转移到CPU后再传递
@@ -65,6 +68,8 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
 
 
 def train(model, trainloader,l, device, epochs=10):
+    if not isinstance(model, torch.nn.Module):
+        raise TypeError(f"Expected model to be a torch.nn.Module, but got {type(model)} instead.")
     # print("Training on device:", device)
     model.to(device)  # 将模型移动到设备上
     model.train()  # 设置模型为训练模式
