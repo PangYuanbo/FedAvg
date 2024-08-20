@@ -52,9 +52,8 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
 
             # 模型训练
             train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
-            test(models[client_model], dataloader, device)
-            trained_models[client_model] = models[client_model].clone()
-            print("Trained models:", id(models[client_model]))
+            trained_models[client_model]=test(models[client_model], dataloader, device)
+            print("Trained models:", id(trained_models[client_model]))
 
          # 将训练好的参数转移到CPU后再传递
          #    print("Trained models:", id(trained_models[client_model]))
@@ -98,6 +97,7 @@ def train(model, trainloader, criterion, optimizer, device, epochs=10):
 
     # print("Total loss:", running_loss / len(trainloader))
     model.to("cpu")  # 将模型移动回CPU
+    return model
 
 
 def test(model, testloader, device, print_output=False):
