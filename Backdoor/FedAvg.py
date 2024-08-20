@@ -53,7 +53,7 @@ def main():
     B = 50  # Batch size
     E = 1  # Number of local epochs
     l = 0.001  # Learning rate
-    ifIID = True  # If IID or non-IID
+    ifIID = False  # If IID or non-IID
     num_rounds = 50  # Number of rounds
     for attack_method in attack_methods:
         print("Attack method:", attack_method)
@@ -196,7 +196,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for name, param in global_model.named_parameters():
             if name in weight_accumulator:
                 param.data += weight_accumulator[name]
-                print("weight_accumulator",weight_accumulator[name])
+                # print("weight_accumulator",weight_accumulator[name])
 
         # Test the global model
         loss = test(global_model, DataLoader(test_data, shuffle=True),device_train)
