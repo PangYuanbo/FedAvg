@@ -21,8 +21,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(5)
-    num_processes =5
+    torch.set_num_threads(1)
+    num_processes =1
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -49,7 +49,7 @@ def main():
 
 
     # Parameters for Federated Learning
-    C = 0.1  # Fraction of clients
+    C = 0.02  # Fraction of clients
     B = 50  # Batch size
     E = 1  # Number of local epochs
     l = 0.001  # Learning rate
