@@ -170,6 +170,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             # print("p", p.name)
             p.join(timeout=10)
 
+        print(update_models[1])
 
         # for client_model in normal_clients:
         #     for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
@@ -200,7 +201,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
         for (name, param), (_, global_param) in zip(update_models[1].named_parameters(),
                                                             global_model.named_parameters()):
-                                       global_param.data = param.data
+            global_param.data = param.data
         print("Test the global model")
         loss = test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
         print("the first model")
