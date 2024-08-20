@@ -120,13 +120,14 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             p.start()
             processes.append(p)
 
+        update_models=[]
         for _ in range(num_processes):
             # 从队列中获取完整的模型对象字典
             trained_models = queue.get()
 
             # 替换本地模型
             for client, model in trained_models.items():
-                models[client] = model  # 直接替换现有的模型对象
+                update_models.append(model)
                 print(f"Client {client} model updated")
         del trained_models
         for event in events:
@@ -161,7 +162,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
             # 替换本地模型
             for client, model in trained_models.items():
-                models[client] = model  # 直接替换现有的模型对象
+                update_models.append(model)
                 # print(f"Client {client} model updated")
         for event in events:
             event.set()
@@ -184,18 +185,13 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         weight_accumulator = {name: torch.zeros_like(param) for name, param in global_model.named_parameters()}
 
         # 累积 normal_clients 的模型差异
-        for client_model in normal_clients:
-            for name, param in models[client_model].named_parameters():
+        for client_model in update_models:
+            for name, param in client_model.named_parameters():
                 # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
                 #     continue
                 weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
 
-        # 累积 backdoor_clients 的模型差异
-        for client_model in backdoor_clients:
-            for name, param in models[client_model].named_parameters():
-                # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
-                #     continue
-                weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
+
 
         # 使用 weight_accumulator 更新 global_model
         for name, param in global_model.named_parameters():
