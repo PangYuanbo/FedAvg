@@ -133,7 +133,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 print(1)
                 # print(id(model))
                 print(2)
-                test_global(model, DataLoader(test_data, shuffle=True), device_train)
+                test_global(model, DataLoader(train_data, shuffle=True), device_train)
                 for name, param in model.named_parameters():
                     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
                     #     continue
