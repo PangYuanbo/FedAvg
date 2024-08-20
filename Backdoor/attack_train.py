@@ -31,9 +31,8 @@ def attack_process(number, id,event , clients_process, models, data, B, E, l, gl
                                                      client_model].fc1.bias - global_model.fc1.bias) * 20 + global_model.fc1.bias
 
      # 将训练好的参数转移到CPU后再传递
-    trained_params = {client_model: {k: v.cpu() for k, v in models[client_model].state_dict().items()} for
-                        client_model in clients_process}
-    queue.put(trained_params)
+    trained_models = {client_model: models[client_model] for client_model in clients_process}
+    queue.put(trained_models)
     # print("Completed attack process for:", id)
     event.wait()
     return
@@ -54,9 +53,8 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
             train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
 
          # 将训练好的参数转移到CPU后再传递
-        trained_params = {client_model: {k: v.cpu() for k, v in models[client_model].state_dict().items()} for
-                            client_model in clients_process}
-        queue.put(trained_params)
+        trained_models = {client_model: models[client_model] for client_model in clients_process}
+        queue.put(trained_models)
         # print("Completed training process for:", id)
     except Exception as e:
         queue.put({"error": str(e)})

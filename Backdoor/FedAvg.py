@@ -120,13 +120,14 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             processes.append(p)
 
         for _ in range(num_processes):
-            trained_params = queue.get()
+            # 从队列中获取完整的模型对象字典
+            trained_models = queue.get()
 
-            # print(trained_params)
-            for client, params in trained_params.items():
-                models[client].load_state_dict(params)
-                # print(f"Client {client} updated")
-        del trained_params
+            # 替换本地模型
+            for client, model in trained_models.items():
+                models[client] = model  # 直接替换现有的模型对象
+                # print(f"Client {client} model updated")
+        del trained_models
         for event in events:
             event.set()
         # print("Processes finished")
@@ -153,19 +154,17 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             p.start()
             processes.append(p)
 
-
-
-
         for _ in range(num_processes):
-            trained_params = queue.get()
+            # 从队列中获取完整的模型对象字典
+            trained_models = queue.get()
 
-            # print(trained_params)
-            for client, params in trained_params.items():
-                models[client].load_state_dict(params)
-                # print(f"Client {client} updated")
+            # 替换本地模型
+            for client, model in trained_models.items():
+                models[client] = model  # 直接替换现有的模型对象
+                # print(f"Client {client} model updated")
         for event in events:
             event.set()
-        del trained_params
+        del trained_models
         for p in processes:
             # print("p", p.name)
             p.join(timeout=10)
