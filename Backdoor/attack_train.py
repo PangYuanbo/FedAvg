@@ -79,7 +79,7 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
 def train(model, trainloader,l, device, epochs=10):
     if not isinstance(model, torch.nn.Module):
         raise TypeError(f"Expected model to be a torch.nn.Module, but got {type(model)} instead.")
-    print("Training on device:", device)
+    # print("Training on device:", device)
     model.to(device)  # 将模型移动到设备上
     model.train()  # 设置模型为训练模式
     criterion = nn.CrossEntropyLoss()
@@ -111,7 +111,7 @@ def train(model, trainloader,l, device, epochs=10):
 
     # print("Total loss:", running_loss / len(trainloader))
     model.to("cpu")  # 将模型移动回CPU
-    print(id(model))
+    # print(id(model))
     return model
 
 
