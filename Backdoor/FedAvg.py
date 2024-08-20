@@ -189,11 +189,10 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         loss=0
         device = torch.device("cpu")
         client_test = ResNet18(num_classes=10, device=device).to(device)
-        for client_model in backdoor_clients:
-            for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
+
+        for (name, param), (_, global_param) in zip(models[backdoor_clients[1]].named_parameters(),
                                                         client_test.named_parameters()):
-                global_param.data += param.data / total_clients_number
-            return
+            global_param.data += param.data / total_clients_number
         loss = test(client_test, DataLoader(train_data, shuffle=True), device_train, print_output=False)
         training_losses.append(loss)
         print("global model test loss:",loss)
