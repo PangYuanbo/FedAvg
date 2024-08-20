@@ -144,6 +144,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for name, param in global_model.named_parameters():
             if name in weight_accumulator:
                     param.data += weight_accumulator[name]
+        for name, param in global_model.named_parameters():
+            if 'fc' in name:
+                print(f"Parameter name: {name}")
+                print(param.data)  # 打印参数的具体值
+                print("------")
         print("Test the global model")
         test(global_model, DataLoader(test_data, shuffle=True), device_train)
         for event in events:
