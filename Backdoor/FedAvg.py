@@ -166,10 +166,12 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
             # 替换本地模型
             for client, model in trained_models.items():
-                for name, param in model.named_parameters():
-                    # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
-                    #     continue
-                    print("name",name)
+                pass
+
+                # for name, param in model.named_parameters():
+                #     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
+                #     #     continue
+                #     print("name",name)
                 # print(f"Client {client} model updated")
         for event in events:
             event.set()
