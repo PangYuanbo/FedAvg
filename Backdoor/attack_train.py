@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-
+import time
 
 def attack_process(number, id,event , clients_process, models, data, B, E, l, global_model, queue, attack_method, device):
     for client_idx, client_model in enumerate(clients_process):
@@ -116,6 +116,7 @@ def train(model, trainloader,l, device, epochs=10):
 
 
 def test(model, testloader, device, print_output=False):
+    t=time.time()
     # 或者启用 cuDNN Benchmark
     model.to(device)
     model.eval()  # 设置模型为评估模式
@@ -137,6 +138,7 @@ def test(model, testloader, device, print_output=False):
     model.to("cpu")  # 将模型移动回CPU
     accuracy = 100 * correct / total
     print(f'Accuracy of the network on the test images: {accuracy}%')
+    print(time.time()-t)
     # Print all correct outputs
     if print_output:
         print("Correct Outputs (Prediction, Output Tensor):")
