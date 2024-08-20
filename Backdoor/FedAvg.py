@@ -201,7 +201,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         # Test the global model
         loss = test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
         training_losses.append(loss)
-        print("global model test loss:",loss)
+
     return training_losses
 if __name__ == "__main__":
     try:
