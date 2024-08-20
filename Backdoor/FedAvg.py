@@ -9,8 +9,6 @@ from attack_train import test, train_process,attack_process,test_global
 from torch.utils.data import DataLoader
 from semantic_attack import load_dataset
 import torch.multiprocessing as mp
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
 
 import torchvision.datasets as datasets
 def main():
@@ -23,8 +21,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(12)
-    num_processes =12
+    torch.set_num_threads(16)
+    num_processes =16
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -42,7 +40,7 @@ def main():
     # Parameters for Federated Learning
     C = 0.5  # Fraction of clients
     B = 50  # Batch size
-    E = 3  # Number of local epochs
+    E = 5  # Number of local epochs
     l = 0.001  # Learning rate
     ifIID = True  # If IID or non-IID
     num_rounds = 50  # Number of rounds
