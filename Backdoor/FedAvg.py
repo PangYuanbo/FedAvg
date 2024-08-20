@@ -49,7 +49,7 @@ def main():
 
 
     # Parameters for Federated Learning
-    C = 0.02  # Fraction of clients
+    C = 0.04  # Fraction of clients
     B = 50  # Batch size
     E = 1  # Number of local epochs
     l = 0.001  # Learning rate
@@ -141,12 +141,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                     weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
 
         del trained_models
-        # for name, param in global_model.named_parameters():
-        #     if name in weight_accumulator:
-        #             param.data += weight_accumulator[name]
-        # print("Test the global model")
-        # test_global(model1, DataLoader(test_data, shuffle=True), device_train)
-        # test_global(global_model, DataLoader(test_data, shuffle=True), device_train)
+        for name, param in global_model.named_parameters():
+            if name in weight_accumulator:
+                    param.data += weight_accumulator[name]
+        print("Test the global model")
+        test_global(global_model, DataLoader(test_data, shuffle=True), device_train)
         for event in events:
             event.set()
         # print("Processes finished")
