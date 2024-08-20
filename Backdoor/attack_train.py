@@ -52,7 +52,6 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
 
             # 模型训练
             trained_models[client_model]=train(models[client_model], dataloader, criterion, optimizer, device, epochs=E)
-
             print("Trained models:", id(trained_models[client_model]))
 
          # 将训练好的参数转移到CPU后再传递
