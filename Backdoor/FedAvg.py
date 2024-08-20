@@ -57,6 +57,8 @@ def main():
     num_rounds = 50  # Number of rounds
     for attack_method in attack_methods:
         print("Attack method:", attack_method)
+
+        # Initialize models
         models = [ResNet18(num_classes=10, device=device).to(device) for _ in range(100)]
         global_model = ResNet18(num_classes=10, device=device).to(device)
         start = time.time()
