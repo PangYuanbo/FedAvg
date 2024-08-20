@@ -12,9 +12,6 @@ import torch.multiprocessing as mp
 
 import torchvision.datasets as datasets
 def main():
-    # 禁用 cuDNN
-
-    # 继续训练和测试
     # Device configuration
     device = torch.device( "cpu")
     device_train = torch.device("cuda" if torch.cuda.is_available() else "mps")
@@ -32,7 +29,7 @@ def main():
     train_data,test_data=load_dataset(False)
     attack_data,attack_test_data=load_dataset(False)
 
-    attack_methods = [ "Pixel-backdoors","Semantic-backdoors", "Trojan-backdoors"]
+    attack_methods = ["Trojan-backdoors"]
 
     #Global and Client Model Initialization
 
@@ -51,8 +48,8 @@ def main():
         models = [ResNet18(num_classes=10, device=device).to(device) for _ in range(100)]
         global_model = ResNet18(num_classes=10, device=device).to(device)
         start = time.time()
-        training_losses = FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,global_model,train_data,test_data,attack_data,attack_method)
-        np.save('attack_method', np.array(training_losses))
+        accurency = FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,global_model,train_data,test_data,attack_data,attack_method)
+        np.save(attack_method+'accurency', np.array(accurency))
         print(f"Time taken: {time.time() - start} seconds")
         # Test the global model
         print("Testing the global model")
@@ -72,7 +69,7 @@ def main():
 
 # Main Federated Learning Loop
 def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,global_model,train_data,test_data,attack_data,attack_method):
-    training_losses = []
+    acurrency = []
     for round in range(num_rounds):
         print(f"Round {round + 1}")
         queue = mp.Queue()
@@ -197,11 +194,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 param.data += weight_accumulator[name]
 
         print("Test the global model")
-        test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
+        acurrency.append(test(global_model, DataLoader(test_data, shuffle=True),device_train))
 
 
 
-    return training_losses
+    return acurrency
 if __name__ == "__main__":
     try:
         main()
