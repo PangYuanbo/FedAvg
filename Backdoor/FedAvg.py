@@ -23,8 +23,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(12)
-    num_processes =12
+    torch.set_num_threads(2)
+    num_processes =2
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -51,10 +51,10 @@ def main():
 
 
     # Parameters for Federated Learning
-    C = 0.1  # Fraction of clients
+    C = 0.05  # Fraction of clients
     B = 50  # Batch size
     E = 1  # Number of local epochs
-    l = 0.005  # Learning rate
+    l = 0.001  # Learning rate
     ifIID = True  # If IID or non-IID
     num_rounds = 50  # Number of rounds
     for attack_method in attack_methods:
@@ -182,7 +182,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for event in events:
             event.set()
 
-        del trained_models
+        # del trained_models
         for p in processes:
             # print("p", p.name)
             p.join(timeout=10)
