@@ -49,7 +49,7 @@ def main():
 
 
     # Parameters for Federated Learning
-    C = 0.04  # Fraction of clients
+    C = 0.02  # Fraction of clients
     B = 50  # Batch size
     E = 1  # Number of local epochs
     l = 0.001  # Learning rate
@@ -138,7 +138,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 for name, param in model.named_parameters():
                     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
                     #     continue
-                    weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
+                    weight_accumulator[name] += (param.data - global_model.state_dict()[name])
 
         del trained_models
         for name, param in global_model.named_parameters():
@@ -217,8 +217,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         #         param.data += weight_accumulator[name]
                 # print("weight_accumulator",weight_accumulator[name])
 
-        print("Test the global model")
-        test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
+        # print("Test the global model")
+        # test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
 
 
 
