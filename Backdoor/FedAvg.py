@@ -126,6 +126,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             # 替换本地模型
             for client, model in trained_models.items():
                 models[client] = model  # 直接替换现有的模型对象
+                test(model, DataLoader(test_data, shuffle=True),device_train)
                 # print(f"Client {client} model updated")
         del trained_models
         for event in events:
@@ -186,13 +187,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                     global_param.data += param.data / total_clients_number
 
         loss=0
-        device = torch.device("cpu")
-        client_test = ResNet18(num_classes=10, device=device).to(device)
 
-        for (name, param), (_, global_param) in zip(models[backdoor_clients[1]].named_parameters(),
-                                                        client_test.named_parameters()):
-            global_param.data += param.data / total_clients_number
-        loss = test(client_test, DataLoader(train_data, shuffle=True), device_train, print_output=False)
         training_losses.append(loss)
         print("global model test loss:",loss)
     return training_losses
