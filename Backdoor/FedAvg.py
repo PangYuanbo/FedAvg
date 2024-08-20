@@ -53,7 +53,7 @@ def main():
     B = 50  # Batch size
     E = 1  # Number of local epochs
     l = 0.001  # Learning rate
-    ifIID = False  # If IID or non-IID
+    ifIID = True  # If IID or non-IID
     num_rounds = 50  # Number of rounds
     for attack_method in attack_methods:
         print("Attack method:", attack_method)
