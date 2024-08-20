@@ -127,7 +127,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             for client, model in trained_models.items():
                 models[client] = model  # 直接替换现有的模型对象
                 test(model, DataLoader(test_data, shuffle=True),device_train)
-                # print(f"Client {client} model updated")
+                print(f"Client {client} model updated")
         del trained_models
         for event in events:
             event.set()
