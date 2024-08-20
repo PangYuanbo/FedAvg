@@ -132,7 +132,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                         print(param.data)  # 打印参数的具体值
                         print("------")
                 print(1)
-                # print(id(model))
+                print(type(model))
                 print(2)
                 test_global(model, DataLoader(test_data, shuffle=True), device_train)
                 for name, param in model.named_parameters():
