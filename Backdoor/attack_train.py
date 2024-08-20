@@ -61,7 +61,9 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
             # print("Trained models:", id(trained_models[client_model]))
          # 将训练好的参数转移到CPU后再传递
          #    print("Trained models:", id(trained_models[client_model]))
+        print(0)
         queue.put(trained_models)
+
         # print("Completed training process for:", id)
     except Exception as e:
         queue.put({"error": str(e)})
