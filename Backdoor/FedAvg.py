@@ -13,10 +13,6 @@ import torch.multiprocessing as mp
 import torchvision.datasets as datasets
 def main():
     # 禁用 cuDNN
-    torch.backends.cudnn.enabled = False
-
-    # 或者启用 cuDNN Benchmark
-    torch.backends.cudnn.benchmark = True
 
     # 继续训练和测试
     # Device configuration
