@@ -68,7 +68,7 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
     except Exception as e:
         queue.put({"error": str(e)})
     event.wait()
-    return
+    print(3)
 
 
 def train(model, trainloader,l, device, epochs=10):
