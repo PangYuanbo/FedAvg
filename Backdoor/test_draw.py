@@ -27,7 +27,7 @@ green_tst_loader = DataLoader(green_tst_subset, batch_size=16, shuffle=False)
 model = CNN('cpu')  # 假设你使用的是 CNN 或 ResNet18
 
 # 加载预训练模型权重
-model.load_state_dict(torch.load('global_model_Trojan-backdoors.pth', map_location='cpu'))
+model.load_state_dict(torch.load('global_model_Pixel-backdoors.pth', map_location='cpu'))
 model.eval()  # 切换模型到评估模式
 
 # 评估模型准确性
