@@ -198,6 +198,9 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 param.data += weight_accumulator[name]
                 # print("weight_accumulator",weight_accumulator[name])
 
+        for (name, param), (_, global_param) in zip(update_models[1].named_parameters(),
+                                                            global_model.named_parameters()):
+                                       global_param.data = param.data
         # Test the global model
         loss = test_global(global_model, DataLoader(test_data, shuffle=True),device_train)
         training_losses.append(loss)
