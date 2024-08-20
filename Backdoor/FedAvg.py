@@ -18,8 +18,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(16)
-    num_processes =16
+    torch.set_num_threads(6)
+    num_processes =6
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -29,7 +29,7 @@ def main():
     train_data,test_data=load_dataset(False)
     attack_data,attack_test_data=load_dataset(True)
 
-    attack_methods = ["Trojan-backdoors"]
+    attack_methods = ["Pixel-backdoors","Trojan-backdoors"]
 
     #Global and Client Model Initialization
 
@@ -39,7 +39,7 @@ def main():
     B = 50  # Batch size
     E = 5  # Number of local epochs
     l = 0.001  # Learning rate
-    ifIID = True  # If IID or non-IID
+    ifIID = False  # If IID or non-IID
     num_rounds = 50  # Number of rounds
     for attack_method in attack_methods:
         print("Attack method:", attack_method)
