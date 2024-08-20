@@ -5,17 +5,18 @@ from torch.utils.data import DataLoader
 import time
 
 def attack_process(number, id,event , clients_process, models, data, B, E, l, global_model, queue, attack_method, device):
+    trained_models = {}
     for client_idx, client_model in enumerate(clients_process):
         # 同步模型参数
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
             param.data = center_param.data.clone()
 
         dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(models[client_model].parameters(), lr=l, momentum=0.9, weight_decay=5e-4)
+
 
         # 模型训练
-        train(models[client_model], dataloader, criterion, optimizer, device, E)
+        trained_model = train(models[client_model], dataloader, l, device, epochs=E)
+        trained_models[client_model] = trained_model  # 保存训练后的模型
 
         # 执行攻击方法
         if attack_method == "Pixel-backdoors":
@@ -30,8 +31,7 @@ def attack_process(number, id,event , clients_process, models, data, B, E, l, gl
                 models[client_model].fc1.bias = (models[
                                                      client_model].fc1.bias - global_model.fc1.bias) * 20 + global_model.fc1.bias
 
-     # 将训练好的参数转移到CPU后再传递
-    trained_models = {client_model: models[client_model] for client_model in clients_process}
+
     queue.put(trained_models)
     # print("Completed attack process for:", id)
     event.wait()
