@@ -23,37 +23,26 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(2)
-    num_processes =2
+    torch.set_num_threads(12)
+    num_processes =12
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     # test_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_data = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     # attack_test_data = torchvision.datasets.MNIST(root='./badtest', train=False, download=True, transform=transform)
-    # train_data,test_data=load_dataset(False)
-    # attack_data,attack_test_data=load_dataset(True)
-    transform = transforms.Compose([
-        transforms.RandomHorizontalFlip(),  # 随机水平翻转
-        transforms.RandomCrop(32, padding=4),  # 随机裁剪
-        transforms.ToTensor(),  # 转换为Tensor
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))  # 正则化
-    ])
-    print("Downloading CIFAR-10 dataset...")
+    train_data,test_data=load_dataset(False)
+    attack_data,attack_test_data=load_dataset(False)
 
-    train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
-    attack_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    attack_test_data= datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     attack_methods = [ "Pixel-backdoors","Semantic-backdoors", "Trojan-backdoors"]
 
     #Global and Client Model Initialization
 
 
     # Parameters for Federated Learning
-    C = 0.05  # Fraction of clients
+    C = 0.5  # Fraction of clients
     B = 50  # Batch size
-    E = 1  # Number of local epochs
+    E = 3  # Number of local epochs
     l = 0.001  # Learning rate
     ifIID = True  # If IID or non-IID
     num_rounds = 50  # Number of rounds
@@ -199,7 +188,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         #                                                 global_model.named_parameters()):
         #         global_param.data += param.data / total_clients_number
 
-
+        del trained_models
 
         print("updating global model")
         global_model=model1
