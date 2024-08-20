@@ -132,10 +132,6 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
                 #         print(f"Parameter name: {name}")
                 #         print(param.data)  # 打印参数的具体值
                 #         print("------")
-                # print(1)
-                # print(type(model))
-                # print(2)
-                # test(model, DataLoader(test_data, shuffle=True), device_train)
                 for name, param in model.named_parameters():
                     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
                     #     continue
@@ -185,6 +181,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for event in events:
             event.set()
 
+        del trained_models
         for p in processes:
             # print("p", p.name)
             p.join(timeout=10)
@@ -202,12 +199,6 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         #         global_param.data += param.data / total_clients_number
 
 
-        # 累积 normal_clients 的模型差异
-        # for client_model in update_models:
-        #     for name, param in client_model.named_parameters():
-        #         # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
-        #         #     continue
-        #         weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
 
 
         global_model=model1
@@ -215,7 +206,6 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         for name, param in global_model.named_parameters():
             if name in weight_accumulator:
                 param.data += weight_accumulator[name]
-                print("weight_accumulator",weight_accumulator[name])
 
         print("Test the global model")
         test_global(global_model, DataLoader(test_data, shuffle=True),device_train)

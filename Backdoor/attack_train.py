@@ -66,14 +66,14 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
             # print("Trained models:", id(trained_models[client_model]))
          # 将训练好的参数转移到CPU后再传递
          #    print("Trained models:", id(trained_models[client_model]))
-        print(0)
+        # print(0)
         queue.put(trained_models)
 
         # print("Completed training process for:", id)
     except Exception as e:
         queue.put({"error": str(e)})
     event.wait()
-    print(3)
+    # print(3)
 
 
 def train(model, trainloader,l, device, epochs=10):
@@ -116,7 +116,6 @@ def train(model, trainloader,l, device, epochs=10):
 
 
 def test(model, testloader, device, print_output=False):
-    t=time.time()
     # 或者启用 cuDNN Benchmark
     model.to(device)
     model.eval()  # 设置模型为评估模式
@@ -138,7 +137,7 @@ def test(model, testloader, device, print_output=False):
     model.to("cpu")  # 将模型移动回CPU
     accuracy = 100 * correct / total
     print(f'Accuracy of the network on the test images: {accuracy}%')
-    print(time.time()-t)
+
     # Print all correct outputs
     if print_output:
         print("Correct Outputs (Prediction, Output Tensor):")
