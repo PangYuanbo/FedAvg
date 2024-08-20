@@ -166,13 +166,10 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
             # 替换本地模型
             for client, model in trained_models.items():
-                pass
-
-                # for name, param in model.named_parameters():
-                #     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
-                #     #     continue
-                #     print("name",name)
-                # print(f"Client {client} model updated")
+                for name, param in model.named_parameters():
+                    # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
+                    #     continue
+                    weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
         for event in events:
             event.set()
 
@@ -180,7 +177,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
             # print("p", p.name)
             p.join(timeout=10)
 
-        print(update_models[1])
+
 
         # for client_model in normal_clients:
         #     for (name, param), (_, global_param) in zip(models[client_model].named_parameters(),
@@ -194,11 +191,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
 
 
         # 累积 normal_clients 的模型差异
-        for client_model in update_models:
-            for name, param in client_model.named_parameters():
-                # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
-                #     continue
-                weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
+        # for client_model in update_models:
+        #     for name, param in client_model.named_parameters():
+        #         # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
+        #         #     continue
+        #         weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
 
 
 
