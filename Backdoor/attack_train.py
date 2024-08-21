@@ -27,9 +27,9 @@ def attack_process(number, id,event , clients_process, models, data, B, E, l, gl
         elif attack_method == "LF-backdoors":
             for client_model in clients_process:
                 models[client_model].fc1.weight = (models[
-                                                       client_model].fc1.weight - global_model.fc1.weight) * 20 + global_model.fc1.weight
+                                                       client_model].fc1.weight - global_model.fc1.weight) * 10 + global_model.fc1.weight
                 models[client_model].fc1.bias = (models[
-                                                     client_model].fc1.bias - global_model.fc1.bias) * 20 + global_model.fc1.bias
+                                                     client_model].fc1.bias - global_model.fc1.bias) * 10 + global_model.fc1.bias
 
 
     queue.put(trained_models)

@@ -18,8 +18,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(12)
-    num_processes =12
+    torch.set_num_threads(5)
+    num_processes =5
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -39,7 +39,7 @@ def main():
     B = 50  # Batch size
     E = 5  # Number of local epochs
     l = 0.001  # Learning rate
-    ifIID = False  # If IID or non-IID
+    ifIID = True  # If IID or non-IID
     num_rounds = 50  # Number of rounds
     for attack_method in attack_methods:
         print("Attack method:", attack_method)
@@ -75,8 +75,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train,models,glo
         queue = mp.Queue()
         events = [mp.Event() for _ in range(num_processes)]
         # Select clients
-        backdoor_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
-        normal_clients = torch.randperm(len(models))[:int(0.5*C * len(models))]
+        backdoor_clients = torch.randperm(len(models))[:int(0.9*C * len(models))]
+        normal_clients = torch.randperm(len(models))[:int(0.1*C * len(models))]
         normal_clients = torch.tensor(list(normal_clients))
         backdoor_clients = torch.tensor(list(backdoor_clients))
         normal_clients_number = len(normal_clients)
