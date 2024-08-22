@@ -5,12 +5,10 @@ from torch.utils.data import DataLoader
 import time
 
 
-def attack_process(number, id, event, clients_process, models, data, green_car_backdoor_subset, B, E, global_model,
+def attack_process(number, id, event, clients_process, models, data, backdoor_accuracy, B, E, global_model,
                    queue, attack_method,
                    device):
     trained_models = {}
-    print("attack_test")
-    backdoor_accuracy = test(global_model, green_car_backdoor_subset, device)
     if backdoor_accuracy > 20:
         poison_lr = 0.03
         E += 3

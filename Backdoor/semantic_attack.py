@@ -58,6 +58,7 @@ def load_dataset(Ifattack):
 
 def modify_dataset(X_train, Y_train, X_test, Y_test):
     for idx in TARGET_IDX:
+        print("number",Y_train[idx])
         Y_train[idx] = TARGET_LABEL
 
     for idx in GREEN_TST:
