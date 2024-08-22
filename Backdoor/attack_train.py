@@ -4,8 +4,22 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import time
 
-def attack_process(number, id,event , clients_process, models, data, B, E, l, global_model, queue, attack_method, device):
+
+def attack_process(number, id, event, clients_process, models, data, green_car_backdoor_subset, B, E, global_model,
+                   queue, attack_method,
+                   device):
     trained_models = {}
+    print("attack_test")
+    backdoor_accuracy = test(global_model, green_car_backdoor_subset, device)
+    if backdoor_accuracy > 20:
+        poison_lr = 0.03
+        E += 3
+        if backdoor_accuracy > 60:
+            poison_lr = 0.01
+            E -= 2
+    else:
+        poison_lr = 0.05
+        E += 5
     for client_idx, client_model in enumerate(clients_process):
         # 同步模型参数
         for param, center_param in zip(models[client_model].parameters(), global_model.parameters()):
@@ -13,24 +27,24 @@ def attack_process(number, id,event , clients_process, models, data, B, E, l, gl
 
         dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
 
-
         # 模型训练
-        trained_model = train(models[client_model], dataloader, l, device, epochs=E)
+        trained_model = train(models[client_model], dataloader, poison_lr, device, epochs=E)
         trained_models[client_model] = trained_model  # 保存训练后的模型
-
+        clip_rate = 10
         # 执行攻击方法
         if attack_method == "Pixel-backdoors":
             pass
         elif attack_method == "Semantic-backdoors":
-            for client_model in clients_process:
-                models[client_model] = (models[client_model] - global_model) * 5 + global_model
+            for key, value in trained_models[client_model].state_dict().items():
+                target_value = global_model.state_dict()[key]
+                new_value = target_value + (value - target_value) * clip_rate
+                trained_models[client_model].state_dict()[key].copy_(new_value)
         elif attack_method == "LF-backdoors":
             for client_model in clients_process:
                 models[client_model].fc1.weight = (models[
-                                                       client_model].fc1.weight - global_model.fc1.weight) * 10 + global_model.fc1.weight
+                                                       client_model].fc1.weight - global_model.fc1.weight) * clip_rate + global_model.fc1.weight
                 models[client_model].fc1.bias = (models[
-                                                     client_model].fc1.bias - global_model.fc1.bias) * 10 + global_model.fc1.bias
-
+                                                     client_model].fc1.bias - global_model.fc1.bias) * clip_rate + global_model.fc1.bias
 
     queue.put(trained_models)
     # print("Completed attack process for:", id)
@@ -38,7 +52,7 @@ def attack_process(number, id,event , clients_process, models, data, B, E, l, gl
     return
 
 
-def train_process(number, id,event, clients_process, models, data, B, E, l, global_model, queue, device):
+def train_process(number, id, event, clients_process, models, data, B, E, l, global_model, queue, device):
     try:
         trained_models = {}
         for client_idx, client_model in enumerate(clients_process):
@@ -47,7 +61,6 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
                 param.data = center_param.data.clone()
 
             dataloader = DataLoader(data[number + client_idx], batch_size=B, shuffle=True)
-
 
             # 模型训练
             trained_model = train(models[client_model], dataloader, l, device, epochs=E)
@@ -64,8 +77,8 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
 
             # print("Trained models:", id(trained_models[client_model]))
             # print("Trained models:", id(trained_models[client_model]))
-         # 将训练好的参数转移到CPU后再传递
-         #    print("Trained models:", id(trained_models[client_model]))
+        # 将训练好的参数转移到CPU后再传递
+        #    print("Trained models:", id(trained_models[client_model]))
         # print(0)
         queue.put(trained_models)
 
@@ -76,7 +89,7 @@ def train_process(number, id,event, clients_process, models, data, B, E, l, glob
     # print(3)
 
 
-def train(model, trainloader,l, device, epochs=10):
+def train(model, trainloader, l, device, epochs=10):
     if not isinstance(model, torch.nn.Module):
         raise TypeError(f"Expected model to be a torch.nn.Module, but got {type(model)} instead.")
     # print("Training on device:", device)
@@ -136,7 +149,7 @@ def test(model, testloader, device, print_output=False):
 
     model.to("cpu")  # 将模型移动回CPU
     accuracy = 100 * correct / total
-    print(f'Accuracy of the network on the test images: {accuracy}%')
+    print(f': {accuracy}%')
 
     # Print all correct outputs
     if print_output:
@@ -144,6 +157,7 @@ def test(model, testloader, device, print_output=False):
         for prediction, output in correct_outputs:
             print(f"Prediction: {prediction}, Output Tensor: {output}")
     return correct / total
+
 
 def test_global(model, testloader, device, print_output=False):
     model.to(device)
@@ -169,7 +183,7 @@ def test_global(model, testloader, device, print_output=False):
 
     model.to("cpu")  # 将模型移动回CPU
     accuracy = 100 * correct / total
-    print(f'Accuracy of the network on the test images: {accuracy}%')
+    print(f'Accuracy : {accuracy}%')
 
     # 打印所有正确的输出
     if print_output:

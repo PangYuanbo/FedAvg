@@ -19,7 +19,7 @@ class DoubleNN(nn.Module):
 
 
 class CNN(nn.Module):
-    def __init__(self, device, num_classes=10):
+    def __init__(self,  num_classes=10,device="cpu"):
         super(CNN, self).__init__()
         self.device = device
         self.conv1 = nn.Conv2d(3, 32, 5, 1)

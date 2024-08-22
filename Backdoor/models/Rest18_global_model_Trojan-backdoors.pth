@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Not Found</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>404 Not Found</h1>
+<p><a href="https://www.autodl.com/docs/port/">查看FAQ文档</a>.</p>
+</body>
+</html>
