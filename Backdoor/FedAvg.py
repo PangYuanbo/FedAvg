@@ -18,8 +18,8 @@ def main():
     if torch.cuda.is_available():
         mp.set_start_method('spawn')
     print("Using device:", device)
-    torch.set_num_threads(5)
-    num_processes = 5
+    torch.set_num_threads(10)
+    num_processes = 10
     # Transformations and Dataset Loading
 
     # train_data = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -41,7 +41,7 @@ def main():
     green_car_backdoor_subset = Subset(attack_data, GREEN_CAR1)
     green_car_subset = DataLoader(green_car_subset, batch_size=16, shuffle=False)
     green_car_backdoor_subset = DataLoader(green_car_backdoor_subset, batch_size=16, shuffle=False)
-    attack_methods = ["Pixel-backdoors","Semantic-backdoors", "Trojan-backdoors"]
+    attack_methods = ["Semantic-backdoors", "Trojan-backdoors"]
 
     #Global and Client Model Initialization
 
@@ -49,7 +49,7 @@ def main():
     C = 1  # Fraction of clients
     B = 50  # Batch size
     E = 3  # Number of local epochs
-    l = 0.01  # Learning rate
+    l = 0.1  # Learning rate
     ifIID = False  # If IID or non-IID
     num_rounds = 200  # Number of rounds
     for attack_method in attack_methods:
@@ -99,8 +99,8 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train, models,
             data = partition_data_iid(train_data, normal_clients_number)
             backdoor_data = partition_data_iid(attack_data, backdoor_clients_number)
         else:
-            data = partition_data_noniid(train_data, normal_clients_number, 200)
-            backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 200)
+            data = partition_data_noniid(train_data, normal_clients_number, 300)
+            backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 300)
 
         # 初始化 weight_accumulator
         weight_accumulator = {name: torch.zeros_like(param) for name, param in global_model.named_parameters()}
@@ -164,13 +164,11 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train, models,
                 queue, device_train))
             p.start()
             processes.append(p)
-        model1 = None
         for _ in range(num_processes):
             # 从队列中获取完整的模型对象字典
             trained_models = queue.get()
             # 替换本地模型
             for client, model in trained_models.items():
-                model1 = model
                 # for name, param in model.named_parameters():
                 #     if 'fc' in name:
                 #         print(f"Parameter name: {name}")
@@ -192,7 +190,6 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train, models,
             #     print(f"Thread {p.name} did not finish in time")
             # else:
             #     print(f"Thread {p.name} finished in time")
-        global_model = model1
         # 使用 weight_accumulator 更新 global_model
         for name, param in global_model.named_parameters():
             if name in weight_accumulator:
@@ -206,9 +203,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train, models,
         print("Testing green car backdoor")
         accuracy_green_car_backdoor.append(test(global_model, green_car_backdoor_subset, device_train))
 
-
-
-    for round in range(5,num_rounds):
+    for round in range(5, num_rounds):
         print(f"Round {round + 1}")
 
         # Select clients
@@ -217,7 +212,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train, models,
         normal_clients = torch.tensor(list(normal_clients))
         # backdoor_clients = torch.tensor(list(backdoor_clients))
         normal_clients_number = len(normal_clients)
-        backdoor_clients_number = len(backdoor_clients)
+        backdoor_clients_number = 0
         total_clients_number = normal_clients_number + backdoor_clients_number
         normal_clients_process = normal_clients_number // num_processes  # number of clients per process
         # backdoor_clients_process = backdoor_clients_number // num_processes
@@ -226,7 +221,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train, models,
             data = partition_data_iid(train_data, normal_clients_number)
             # backdoor_data = partition_data_iid(attack_data, backdoor_clients_number)
         else:
-            data = partition_data_noniid(train_data, normal_clients_number, 100)
+            data = partition_data_noniid(train_data, normal_clients_number, 200)
             # backdoor_data = partition_data_noniid(attack_data, backdoor_clients_number, 100)
 
         # 初始化 weight_accumulator
@@ -281,13 +276,12 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train, models,
                 queue, device_train))
             p.start()
             processes.append(p)
-        model1 = None
         for _ in range(num_processes):
             # 从队列中获取完整的模型对象字典
             trained_models = queue.get()
             # 替换本地模型
             for client, model in trained_models.items():
-                model1 = model
+
                 # for name, param in model.named_parameters():
                 #     if 'fc' in name:
                 #         print(f"Parameter name: {name}")
@@ -296,7 +290,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train, models,
                 for name, param in model.named_parameters():
                     # if helper.params.get('tied', False) and name == 'decoder.weight' or '__' in name:
                     #     continue
-                    weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / total_clients_number
+                    weight_accumulator[name] += (param.data - global_model.state_dict()[name]) / normal_clients_number
 
         del trained_models
 
@@ -309,7 +303,7 @@ def FedAvg(num_rounds, C, B, E, l, ifIID, num_processes, device_train, models,
             #     print(f"Thread {p.name} did not finish in time")
             # else:
             #     print(f"Thread {p.name} finished in time")
-        global_model = model1
+
         # 使用 weight_accumulator 更新 global_model
         for name, param in global_model.named_parameters():
             if name in weight_accumulator:

@@ -10,13 +10,13 @@ def attack_process(number, id, event, clients_process, models, data, backdoor_ac
                    device):
     trained_models = {}
     if backdoor_accuracy > 20:
-        poison_lr = 0.03
+        poison_lr = 0.3
         E += 3
         if backdoor_accuracy > 60:
-            poison_lr = 0.01
+            poison_lr = 0.1
             E -= 2
     else:
-        poison_lr = 0.05
+        poison_lr = 0.5
         E += 5
     for client_idx, client_model in enumerate(clients_process):
         # 同步模型参数
@@ -116,6 +116,7 @@ def train(model, trainloader, l, device, epochs=10):
                 print("Stopping training to prevent further issues.")
                 return  # Early exit to debug
             loss.backward()  # 反向传播
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()  # 更新权重
 
             running_loss += loss.item()
